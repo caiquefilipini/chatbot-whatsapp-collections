@@ -1,3 +1,19 @@
-venv/
-*.pyc
+# Ignore arquivos de segredos
+secrets.toml
+.env
+
+# Ignorar arquivos e pastas comuns
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Ignorar ambientes virtuais
+.venv/
+venv/
+env/
+
+# Ignorar arquivos e diretórios específicos do sistema operacional
+.DS_Store
+Thumbs.db
