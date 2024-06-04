@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_feedback import streamlit_feedback
 
+
 st.set_page_config(
     page_title="IA Santander Recuperações",
     # page_icon="🦙",
@@ -38,6 +39,16 @@ st.title("IA Santander Recuperações")
 # Possíveis melhorias:
 # Excluir chat?
 # Corrigir feedbacks
+# Operador pode ter acesso a histórico? Se não, porque?
+# Mostrar resumo?
+
+
+# pedi cidade
+
+### ...
+
+
+# naquela primeira cidade...
 
 
 if 'search_query' not in st.session_state:
