@@ -1,6 +1,12 @@
 import streamlit as st
 from streamlit_feedback import streamlit_feedback
+import pyperclip
+from pycpfcnpj import cpf
 
+from functions import display_chat
+
+
+# from streamlit_copy_to_clipboard import st_copy_button
 
 st.set_page_config(
     page_title="IA Santander Recuperações",
@@ -13,9 +19,7 @@ st.set_page_config(
 
 # Título da aplicação
 st.title("IA Santander Recuperações")
-
-
-
+st.write("---")
 
 # st.header('Cabeçalho')
 # st.subheader('Subcabeçalho')
@@ -41,14 +45,6 @@ st.title("IA Santander Recuperações")
 # Corrigir feedbacks
 # Operador pode ter acesso a histórico? Se não, porque?
 # Mostrar resumo?
-
-
-# pedi cidade
-
-### ...
-
-
-# naquela primeira cidade...
 
 
 if 'search_query' not in st.session_state:
@@ -78,7 +74,6 @@ st.sidebar.write("---")
 
 st.sidebar.title("Histórico de Chats")
 # st.sidebar.write("---")
-
 
 
 # Campo de texto para buscar conversas por CPF
@@ -168,58 +163,16 @@ for message in st.session_state['messages']:
 
 
 
-# Inicialização do chat
-# if "messages" not in st.session_state.keys(): # Initialize the chat messages history
-#     st.session_state.messages = [
-#         {"role": "assistant", "content": "Ask me a question about Streamlit's open-source Python library!"}
-#     ]
 
 
-
-# feedback = streamlit_feedback(
-#     feedback_type="faces",  # Apply the selected feedback style
-    
-#     optional_text_label="[Optional] Please provide an explanation",
-#     key="feedback",
-
-# )
-# feedback
-
-# if prompt := st.chat_input("Insira aqui a mensagem do cliente"): # Prompt for user input and save to chat history
-#     st.session_state.messages.append({"role": "user", "content": prompt})
-
-
-# if 'botao_enviar' not in st.session_state:
-#     st.session_state['botao_enviar'] = 1
-# if 'messages' not in st.session_state:
-#     st.session_state['messages'] = []
-# if 'reset_key' not in st.session_state:
-#     st.session_state['reset_key'] = 0
-
-
-
-# Função para exibir uma nova interação
-def display_interaction():
-    st.session_state.interaction_count += 1
-    # st.write(f"--- Interacção {st.session_state.interaction_count} ---")
-
-
-# Função para exibir uma nova interação
-def display_feedback_interaction():
-    st.session_state.interaction_count_feedback += 1
-    st.write(f"--- Interacção {st.session_state.interaction_count_feedback} ---")
 
 # Inicialização das variáveis de sessão
 if "chat" not in st.session_state:
     st.session_state.chat = []
-
 if "chat_count" not in st.session_state:
     st.session_state.chat = []
-
-
 if "estado_botao_enviar" not in st.session_state:
     st.session_state["estado_botao_enviar"] = 0
-
 if "interaction_count" not in st.session_state:
     st.session_state.interaction_count = 0
 if "customer_messages" not in st.session_state:
@@ -231,260 +184,87 @@ if "user_ratings" not in st.session_state:
 if "user_responses" not in st.session_state:
     st.session_state.user_responses = []
 
-# Entrada da mensagem do cliente
-# st.write(f"Passo 1. Insira a mensagem que o cliente enviou:")
-# texto = st.write(f"Passo 1. Insira a mensagem que o cliente enviou:")
-
-# Colocar na mesma formatação de st.write
-# customer_message = st.text_input(label=f"Passo 1. Insira a mensagem que o cliente enviou:", key=f"customer_message_{st.session_state.interaction_count}")
-# botao_enviar = st.button("Enviar", key=f"botao_enviar_{st.session_state.interaction_count}")
-
-customer_message = st.text_input(label=f"Passo 1. Insira a mensagem que o cliente enviou:", key=f"customer_message_{st.session_state.interaction_count}")
-# botao_enviar = st.button("Enviar", key=f"botao_enviar_{st.session_state.interaction_count}")
 
 
 
 
-# Função que recebe a mensagem do cliente e retorna uma sugestão de resposta da IA
-def bot_response(customer_message):
-    if customer_message == "a":
-        resposta = "Resposta padrão (igual a a)."
-    else:
-        resposta = "Resposta padrão (diferente de a)."
-    return resposta
+###########################
+# Funcionalidade: Inserir CPF antes de começar o chat
+
+# Definindo uma chave para o estado da sessão
+if 'input_visibility' not in st.session_state:
+    st.session_state.input_visibility = True
 
 
+if 'input_visibility_assunto' not in st.session_state:
+    st.session_state.input_visibility_assunto = True
+
+# Valida o CPF
+def valida_cpf(cpf_cliente):
+    return cpf.validate(cpf_cliente)
 
 
+# st.session_state.assunto_temp = "" 
 
-# if "interaction_count_feedback" not in st.session_state:
-#     st.session_state.interaction_count_feedback = 0
+# Função para esconder o input
+def inserir_cpf():
+    cpf = st.session_state.cpf_temp
+    if valida_cpf(cpf):
+        st.session_state.input_visibility = False
+        st.session_state.cpf_cliente = cpf
 
+# 42006925890
 
-# if 'feedback_corrected' not in st.session_state:
-#     st.session_state.feedback_corrected = False
-
-# if customer_message and botao_enviar:
-#     st.session_state["estado_botao_enviar"] = 1
-#     st.session_state["customer_messages"].append(customer_message)
-
-# condicional_mensagem_cliente = customer_message and st.session_state["estado_botao_enviar"] > 0
-# st.write(f"{verificar}")
-
-
-# Exibe sugestões de resposta do bot e permite a avaliação
-if customer_message:
-    st.session_state.customer_messages.append(customer_message) # Salva a mensagem do cliente
-    bot_suggestion = bot_response(customer_message) # Sugestão de resposta do bot
-    st.session_state.bot_suggestions.append(bot_suggestion) # Salva a sugestão do bot
-    st.write(f"Sugestão da IA: {bot_suggestion}") # Exibe a sugestão do bot
-
-# Criar botão copiar
-
-
-    # Avaliação da sugestão do bot
-    # st.write(f"Passo 2. Avalie a sugestão da IA:")
-
-    # Define componentes de feedback para o usuário avaliar a sugestão do bot
-    # feedback = streamlit_feedback(
-    #     feedback_type="faces",  # Aplica o estilo de feedback selecionado
-    #     optional_text_label="[Opcional] Explique o motivo da sua nota",
-    #     key=f"feedback+{st.session_state.interaction_count}",
-    #     align="flex-start"
-    # )
-
-
-    feedback = st.radio(
-        "Passo 2. Avalie a sugestão da IA:",
-        ('Muito ruim', 'Ruim', 'Neutro', 'Bom', 'Muito bom'),
-        key="feedback", 
-    )
-
-    if feedback:
-        st.session_state.user_ratings.append(feedback) # Salva o feedback do usuário
-        user_response = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", bot_suggestion, key=f"user_response")
-        st.session_state.user_responses.append(user_response) # Salva a resposta do usuário
-
-    #     if st.button("Corrigir Feedback", key=f"corrigir_feedback_{st.session_state.interaction_count}"):
-    #         st.session_state.user_ratings.pop() # Remove a nota a ser corrigida
-    #         display_feedback_interaction() # Exibe uma nova interação de feedback
+if st.session_state.input_visibility:
+    # Deixando o campo do CPF menor para melhor disposição na página
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1: campo_cpf = st.text_input("Insira o CPF do cliente:", key='cpf_temp', on_change=inserir_cpf)
+    with col2: st.empty()
+    with col3: st.empty()
+    botao_inserir = st.button("Inserir", on_click=inserir_cpf())
+    if botao_inserir or campo_cpf:
+        st.error("CPF inválido. Tente novamente.")
         
-
-    else:
-        st.error("Por favor, avalie a sugestão da IA antes de prosseguir.")
+        # st.error("Insira um assunto.")
 
 
-    if st.button("Adicionar ao histórico", key=f"adicionar_historico_{st.session_state.interaction_count}"):
-        # st.session_state["estado_botao_enviar"] = 0 # Reseta o estado do botão de enviar
-        display_interaction() # Exibe uma nova interação
-        st.experimental_rerun()
-        # if st.button("Adicionar nova mensagem do cliente", key=f"adicionar_nova_mensagem_{st.session_state.interaction_count}"):
-        #     display_interaction() # Exibe uma nova interação
-
-    # st.session_state["estado_botao_enviar"] = 0
-
-    # if feedback:
-    #     st.session_state.user_ratings.append(feedback)
-    #     st.session_state.feedback_corrected = False
-    #     user_response = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", bot_suggestion, key=f"user_response_{st.session_state.interaction_count}")
-    #     st.session_state.user_responses.append(user_response)
-    #     botao_corrigir_feedback = st.button("Corrigir Feedback", key=f"corrigir_feedback_{st.session_state.interaction_count}")
-    #     if botao_corrigir_feedback:
-    #         if st.session_state.user_ratings:
-    #             st.session_state.user_ratings.pop()
-    #         st.session_state.feedback_corrected = True
-    #         st.experimental_rerun()  # Reinicializa a execução do app para recolher novo feedback
+def inserir_assunto():
+    st.session_state.input_visibility_assunto = False
+    st.session_state.assunto = st.session_state.assunto_temp
 
 
-
-# interaction_count_feedback
-
-
-        # if st.button("Adicionar nova mensagem do cliente"):
-        #     display_interaction()
-
-
-
-    # Entrada da resposta final do usuário
-    # user_response = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", bot_suggestion, key=f"user_response_{st.session_state.interaction_count}")
-    # st.session_state.user_responses.append(user_response)
-
-    # Botão para adicionar nova interação
-    # if st.button("Adicionar nova mensagem do cliente"):
-    #     display_interaction()
-    # ----------- #
-
-    # Avaliação da sugestão do bot
-    
-    # st.write(f"Passo 2. Avalie a sugestão da IA:")
-    # # Define componentes de feedback para o usuário avaliar a sugestão do bot
-    # feedback = streamlit_feedback(
-    #     feedback_type="faces",
-    #     optional_text_label="[Opcional] Explique o motivo da sua nota",
-    #     key="feedback",
-    #     align="flex-start"
-    # )
-
-    # Cria um estado para verificar se o usuário deseja corrigir o feedback
-    # if 'deseja_corrigir_feedback' not in st.session_state:
-    #     st.session_state.deseja_corrigir_feedback = True
-
-    # Enquanto o usuário não corrigir o feedback, o botão de corrigir feedback é exibido
-    # Não sai do loop enquanto o usuário desejar corrigir o feedback
-
-
-    # if feedback:
-    #     # Salva o feedback do usuário
-    #     st.session_state.user_ratings.append(feedback)
+# Exibindo o valor registrado
+if 'cpf_cliente' in st.session_state:
+    if st.session_state.input_visibility_assunto:
+        cpf_inserido = st.write("CPF do cliente:", st.session_state.cpf_cliente, key='cpf_cliente')
         
-    #     # Entrada da resposta final do usuário
-    #     user_response = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", bot_suggestion, key=f"user_response_{st.session_state.interaction_count}")
-    #     st.session_state.user_responses.append(user_response)
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1: assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key='assunto_temp')
+        with col2: st.empty()
+        with col3: st.empty()
+        botao_inserir_assunto = st.button("Inserir assunto", on_click=inserir_assunto(), key='inserir_assunto')
 
-    #     # Botão para adicionar nova interação
-    #     if st.button("Adicionar nova mensagem do cliente"):
-    #         display_interaction()
-    
+
+    cpf_inserido = st.write("CPF do cliente:", st.session_state.cpf_cliente, key='cpf_cliente')
+    assunto_inserido = st.write("Assunto:", st.session_state.assunto, key='assunto_cliente')
+    st.write("---")
+    # Carregar informações relevantes sobre o cliente
+
+    # if cpf_encontrado:
+    #     st.write("Cliente encontrado.") # Busca no banco de dados
     # else:
-    #     st.error("Por favor, avalie a sugestão da IA antes de prosseguir.")
+    #     st.write("Cliente não encontrado.") # Abre campos para inserir informações do cliente manualmente
+
+    # Somente mostrar a função de chat se tiver algum CPF inserido.
     
-    # while st.session_state.deseja_corrigir_feedback:
-
-    #     st.write(f"Passo 2. Avalie a sugestão da IA:")
-    #     # Define componentes de feedback para o usuário avaliar a sugestão do bot
-    #     feedback = streamlit_feedback(
-    #         feedback_type="faces",
-    #         optional_text_label="[Opcional] Explique o motivo da sua nota",
-    #         # key="feedback",
-    #         align="flex-start"
-    #     )
-
-    #     if feedback:
-    #         # Salva o feedback do usuário
-    #         st.session_state.user_ratings.append(feedback)
-            
-    #         # Entrada da resposta final do usuário
-    #         user_response = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", bot_suggestion, key=f"user_response_{st.session_state.interaction_count}")
-    #         st.session_state.user_responses.append(user_response)
-    #     else:
-    #         st.error("Por favor, avalie a sugestão da IA antes de prosseguir.")
-        
-    #     if st.button("Corrigir Feedback"):
-    #         st.session_state.user_ratings.pop()
-    #         st.session_state.deseja_corrigir_feedback = True
-    #         st.experimental_rerun()
-        
-    #     else: deseja_corrigir_feedback = False
-
-    # Botão para adicionar nova interação
-    # if st.button("Adicionar nova mensagem do cliente"):
-    #     display_interaction()
-    
-    
-
-
-
-
-
-# st.chat_message("Hello, I'm a chatbot. How can I help you today?")
-# st.chat_input()
-
-# id = 'x'
-
-# dados = {
-#     "dados_cliente":
-#         {
-#             "cpf": "12345678901",
-#             "nome": "João"
-#         },
-
-#     "dados_conversa":
-#         {
-#             "id": id,
-
-
-#             "id_1":
-#                 {
-#                     "data": "2024-06-01",
-#                     "hora": "12h42",
-#                 },
-#             "id_2":
-#                 {
-#                     "data": "2024-06-01",
-#                     "hora": "12h42",
-#                 },
-#         }
-    
-    
-    
-#     }
- 
- 
-#  }
-
-
-# {"id": id 
-#     data = 
-#     hora = 
-#     mensagem_cliente = 
-#     sugestao_ia = 
-    # resposta_usuario =
-
-
-if st.session_state.interaction_count > 0:
-    # Exibição das interações
+    st.write("Informações sobre o cliente:")
+    st.write("- Valor da dívida:")
+    st.write("- Dias em atraso:")
     st.write("---")
-    st.write("### Histórico da Conversa")
-    st.write("---")
+    
+    display_chat()
 
-    # Exibir da mensagem mais recente para a mais antiga
-    for i in range(st.session_state.interaction_count, -1, -1):
-        st.write(f"ID: {i+1} / Data: {"2024-06-01"} / Hora: {"12h42"}") # Colocar datas e horas corretas
-        st.write(f"Mensagem do cliente: {st.session_state.customer_messages[i]}")
-        st.write(f"Sugestão da IA: {st.session_state.bot_suggestions[i]}  (Nota {st.session_state.user_ratings[i]})")
-        st.write(f"Resposta enviada ao cliente: {st.session_state.user_responses[i]}")
-        st.write("---")
 
-# digitalk
-# bom ...
-# 
+############################
+# Funcionalidade: Somente mostrar a função de chat se tiver algum CPF inserido.
+
