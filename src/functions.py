@@ -69,14 +69,14 @@ def display_chat():
     # Escala de notas que o usuário deve utilizar para avaliar a sugestão da IA
     escala_notas = """
         1 – Resposta Crítica. Poderia causar dano na imagem do banco, gerar reclamações por parte do cliente ou ainda um processo judicial.\n
-        2 - Resposta Ruim. Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas não avalio como um bom atendimento.\n
+        2 – Resposta Ruim. Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas não avalio como um bom atendimento.\n
         3 – Resposta Razoável. Resposta correta, porém poderia ser mais empático/educado.\n
         4 – Boa resposta. Praticamente a mesma resposta que eu daria, porém faria alguns ajustes.\n
         5 – Ótima resposta. Resposta igual ou ainda melhor do que a resposta que eu daria.\n
     """
 
 	# 0 – Crítico. Poderia gerar dano na imagem do banco, processo judicial, ou ainda gerar reclamações por parte do cliente.
-    # 1 - Ruim. Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas avalio como um bom atendimento.
+    # 1 – Ruim. Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas avalio como um bom atendimento.
 	# 3 – Razoável. Resposta correta, porém poderia ser mais empático/educado.
 	# 4 – Boa resposta. Praticamente a mesma resposta que eu daria, porém com alguns ajustes.
 	# 5 – Ótima resposta. Resposta igual ou ainda melhor do que a resposta que eu daria.
@@ -97,7 +97,7 @@ def display_chat():
             "Passo 2. Avalie a sugestão da IA:",
             (
                 "1 – Resposta Crítica",
-                "2 - Resposta Ruim",
+                "2 – Resposta Ruim",
                 "3 – Resposta Razoável",
                 "4 – Boa Resposta",
                 "5 – Ótima Resposta",
