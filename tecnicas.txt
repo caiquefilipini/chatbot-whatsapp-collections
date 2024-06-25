@@ -1,0 +1,29 @@
+
+
+
+Banco de Dados
+- SQL
+- NoSQL
+
+
+Ferramentas
+
+- Ambiente
+    - Virtualenv
+    - VS Code
+    - Git
+    - GitHub
+    - Pyenv
+    - dot-env
+
+- Frontend
+    - Streamlit
+
+- Generative AI
+    - LangChain
+    - Buffer Memory
+    - Prompt Engineering
+        - Prompt Evolutivo
+        - Delimitadores
+        - Placeholders
+    - Crew AI

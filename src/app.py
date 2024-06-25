@@ -8,12 +8,12 @@ import streamlit as st
 from pycpfcnpj import cpf
 
 from functions import display_chat, display_interaction
-
+from save_conversations import conectar_mongo, inserir_cliente, inserir_mensagem
 
 # from streamlit_copy_to_clipboard import st_copy_button
 
 st.set_page_config(
-    page_title="Chatbot Santander Recuperações",
+    page_title="NegociaAI Santander",
     # page_icon="🦙",
     page_icon="./images/santander-icon.png",
     layout="centered",
@@ -22,7 +22,7 @@ st.set_page_config(
 
 
 # Título da aplicação
-st.title("Chatbot Santander Recuperações")
+st.title("NegociaAI Santander")
 st.write("---")
 
 # st.header('Cabeçalho')
@@ -206,123 +206,165 @@ for message in st.session_state['messages']:
 # Funcionalidade: Inserir CPF antes de começar o chat
 
 # Definindo uma chave para o estado da sessão
-if 'input_visibility' not in st.session_state:
-    st.session_state.input_visibility = True
+# if 'input_visibility' not in st.session_state:
+#     st.session_state.input_visibility = True
 
-if 'input_visibility_assunto' not in st.session_state:
-    st.session_state.input_visibility_assunto = True
+# if 'input_visibility_assunto' not in st.session_state:
+#     st.session_state.input_visibility_assunto = True
 
-# Valida o CPF
-def valida_cpf(cpf_cliente):
-    return cpf.validate(cpf_cliente)
+# # Valida o CPF
+# def valida_cpf(cpf_cliente):
+#     return cpf.validate(cpf_cliente)
 
-# Função para esconder o input
-def inserir_cpf():
-    cpf = st.session_state.cpf_temp
-    if valida_cpf(cpf):
-        st.session_state.input_visibility = False
-        st.session_state.cpf_cliente = cpf
+# # Função para esconder o input
+# def inserir_cpf():
+#     cpf = st.session_state.cpf_temp
+#     if valida_cpf(cpf):
+#         st.session_state.input_visibility = False
+#         st.session_state.cpf_cliente = cpf
 
-if st.session_state.input_visibility:
-    # Deixando o campo do CPF menor para melhor disposição na página
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col1: campo_cpf = st.text_input("Insira o CPF do cliente:", key='cpf_temp') #, on_change=inserir_cpf)
-    with col2: st.empty()
-    with col3: st.empty()
-    botao_inserir = st.button("Inserir", on_click=inserir_cpf, key="inserir_cpf")
-    if botao_inserir: #or campo_cpf:
-        st.error("CPF inválido. Tente novamente.")
+# if st.session_state.input_visibility:
+#     # Deixando o campo do CPF menor para melhor disposição na página
+#     col1, col2, col3 = st.columns([1, 1, 1])
+#     with col1: campo_cpf = st.text_input("Insira o CPF do cliente:", key='cpf_temp', help="Insira um CPF válido com 11 dígitos.") #, on_change=inserir_cpf)
+#     with col2: st.empty()
+#     with col3: st.empty()
+#     botao_inserir = st.button("Inserir", on_click=inserir_cpf, key="inserir_cpf")
+#     if botao_inserir: #or campo_cpf:
+#         if not campo_cpf.isdigit():
+#             st.error("CPF inválido. Insira somente números.")
+#         else:
+#             if len(campo_cpf) != 11:
+#                 st.error("O CPF precisa ter exatamente 11 dígitos. Complete com zeros à esquerda, se necessário.")
+#             else:
+#                 st.error("CPF inválido. Verifique e tente novamente.")
 
-if 'input_visibility_assunto' not in st.session_state:
-    st.session_state.input_visibility_assunto = True
+#         # st.error("O CPF precisa ter exatamente 11 dígitos. Complete com zeros à esquerda, se necessário.")
 
-def _inserir_assunto():
-    assunto = st.session_state.assunto_temp
-    if assunto != "":
-        st.session_state.input_visibility_assunto = False
-        st.session_state.assunto = st.session_state.assunto_temp
+# if 'input_visibility_assunto' not in st.session_state:
+#     st.session_state.input_visibility_assunto = True
+
+# def _inserir_assunto():
+#     assunto = st.session_state.assunto_temp
+#     if assunto != "":
+#         st.session_state.input_visibility_assunto = False
+#         st.session_state.assunto = st.session_state.assunto_temp
 
 
 
 # Exibindo o valor registrado
-if 'cpf_cliente' in st.session_state:
-    # pass
-    st.write(f"Data e hora de início do chat: {datetime.now().strftime("%d/%m/%Y %H:%M")}")
-    st.write("CPF do cliente:", st.session_state.cpf_cliente)
-
-    # def display_assunto(cpf):
-    if st.session_state.input_visibility_assunto:
-        # Exibe o campo para inserir o assunto e o botão para inserir
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col1: assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key='assunto_temp')
-        with col2: st.empty()
-        with col3: st.empty()
-        botao_inserir_assunto = st.button("Inserir assunto", on_click=_inserir_assunto, key="inserir_assunto")
-        if botao_inserir_assunto:
-            st.error("Insira um assunto válido.")
-
-    # Somente insere o assunto se o botão for clicado e o assunto for selecionado
-    if "assunto" in st.session_state:
-        st.write("Assunto:", st.session_state.assunto)
-        st.write("---")
-
-
-
-# =============================================================================
-
-
-if 'cpf_encontrato' not in st.session_state:
-    st.session_state.cpf_encontrado = False
-
-# st.write(os.getcwd())
-# st.write(os.path.exists("./data/"))
-
-if "assunto" in st.session_state:
-
-    # Especificar o caminho para o diretório onde o banco de dados está localizado
-    path = "./data/"
-
-
-    # Especificar o valor do CPF como uma string entre aspas simples
-    cpf_value = st.session_state.cpf_cliente
-    query = f"SELECT * FROM customer_database_table WHERE cpf = '{cpf_value}'"
-
-    # Buscar o cliente no banco de dados
-    with sqlite3.connect(os.path.join(path, 'customer_database.sqlite')) as conn:
-        # Executar a consulta SQL e ler o resultado em um DataFrame do pandas
-        consulta_cliente = pd.read_sql_query(query, conn)
-
-    # pd.read_sql_query("SELECT * FROM customers WHERE cpf = cpf_cliente", conn)
-
-    # if cpf_encontrado:
-    #     st.write("Cliente encontrado.") # Busca no banco de dados
-    # else:
-    #     st.write("Cliente não encontrado.") # Abre campos para inserir informações do cliente manualmente
-
-
-    # Carregar informações relevantes sobre o cliente
-    # json_cliente = {
-    #     "nome": "Caíque Filipini",
-    #     "segmento": "Select",
-    #     "quantidade_contratos": 10,
-    #     "valor_divida": 0,
-    #     "max_dias_atraso": 0
-    # }
-
-    st.subheader("Informações do cliente:")
-    st.write("- Nome:", consulta_cliente["nome"][0])
-    st.write("- Segmento:", consulta_cliente["segmento"][0])
-    st.write(f"- Quantidade de contratos: {consulta_cliente["qtd_cont"][0]}")
-    st.write(f"- Valor total da dívida: {consulta_cliente["vlr_total_div"][0]}")
-    st.write(f"- Máximo dias em atraso: {consulta_cliente["max_dias_atraso"][0]}")
-    st.write("---")
+# if 'cpf_cliente' in st.session_state:
+#     st.session_state.dt_hr_ini = datetime.now().strftime("%d/%m/%Y %H:%M")
+#     st.write(f"Data e hora de início do chat: {st.session_state.dt_hr_ini}")
+#     st.write("CPF do cliente:", st.session_state.cpf_cliente)
     
-    st.session_state.cpf_encontrado = True
-# Resposta padrão (diferente de a).
+#     # Selecionar o assunto da conversa
+#     if st.session_state.input_visibility_assunto:
+#         # Exibe o campo para inserir o assunto e o botão para inserir
+#         col1, col2, col3 = st.columns([1, 1, 1])
+#         with col1: assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key='assunto_temp')
+#         with col2: st.empty()
+#         with col3: st.empty()
+#         botao_inserir_assunto = st.button("Inserir assunto", on_click=_inserir_assunto, key="inserir_assunto")
+#         if botao_inserir_assunto:
+#             st.error("Insira um assunto válido.")
+
+#     # Somente insere o assunto se o botão for clicado e o assunto for selecionado
+#     if "assunto" in st.session_state:
+#         st.write("Assunto:", st.session_state.assunto)
+#         st.write("---")
+
+
 # =============================================================================
+
+
+# if 'cpf_encontrado' not in st.session_state:
+#     st.session_state.cpf_encontrado = False
+
+# # st.write(os.getcwd())
+# # st.write(os.path.exists("./data/"))
+
+# if "assunto" in st.session_state:
+#     # Especificar o caminho para o diretório onde o banco de dados está localizado
+#     path = "./data/" # Sempre parte da raíz do projeto
+    
+#     # Especificar o valor do CPF como uma string entre aspas simples
+#     cpf_value = st.session_state.cpf_cliente
+#     query = f"SELECT * FROM customer_database_table WHERE cpf = '{cpf_value}'"
+
+    
+#     # if 
+#     # Buscar o cliente no banco de dados
+#     with sqlite3.connect(os.path.join(path, 'customer_database.sqlite')) as conn:
+#         # Executar a consulta SQL e ler o resultado em um DataFrame do pandas
+#         consulta_cliente = pd.read_sql_query(query, conn)
+
+
+#     cliente_dados = {
+#         "nome": consulta_cliente["nome"][0],
+#         "segmento": consulta_cliente["segmento"][0],
+#         "qtd_cont": consulta_cliente["qtd_cont"][0],
+#         "vlr_total_div": consulta_cliente["vlr_total_div"][0],
+#         "max_dias_atraso": consulta_cliente["max_dias_atraso"][0]
+#     }
+
+#     st.subheader("Informações do cliente:")
+#     st.write("- Nome:", cliente_dados["nome"])
+#     st.write("- Segmento:", cliente_dados["segmento"])
+#     st.write(f"- Quantidade de contratos: {cliente_dados["qtd_cont"]}")
+#     st.write(f"- Valor total da dívida: {cliente_dados["vlr_total_div"]}")
+#     st.write(f"- Máximo dias em atraso: {cliente_dados["max_dias_atraso"]}")
+#     st.write("---")
+    
+#     st.session_state.cpf_encontrado = True
+
+
+#     # Armazena dados da conversa no banco de dados
+#     cpf = st.session_state.cpf_cliente
+#     assunto = st.session_state.assunto
+#     dt_hr_ini = st.session_state.dt_hr_ini
+
+#     # st.write(cpf, assunto, dt_hr_ini, cliente_dados)
+#     inserir_cliente(cpf, assunto, dt_hr_ini)#, cliente_dados)
+
+
+    # =============================================================================
+
+
 # Somente mostrar a função de chat se tiver algum CPF inserido.
 if st.session_state.cpf_encontrado:
-    display_chat()
-    # increase_interaction_count()
+    display_chat() # a função de armazenar os dados da conversa vai aqui dentro
     display_interaction()
 
+
+
+# else:
+#     st.write("CPF não encontrado na base de dados. Faça o atendimento ao cliente sem o auxílio da IA")
+
+
+# Salva dados da mensagem no banco de dados
+# assunto = "Status do Pedido"
+# dt_hr_ini = "2024-06-01 12:42"
+# mensagem1 = {
+#     "data_msg": "2024-06-01",
+#     "hora_msg": "12h42",
+#     "mensagem_cliente": "bom dia",
+#     "sugestao_ia": "bom dia, sr.",
+#     "resposta_final": "bom dia, sr. Carlos",
+#     "rating": "4. Boa Resposta"
+# }
+
+# mensagem2 = {
+#     "data_msg": "2024-06-01",
+#     "hora_msg": "14h15",
+#     "mensagem_cliente": "qual o status do meu pedido?",
+#     "sugestao_ia": "Seu pedido está a caminho.",
+#     "resposta_final": "Seu pedido está a caminho e deve chegar até o fim do dia.",
+#     "rating": "5. Excelente"
+# }
+
+# # Passo 2: Appendar o primeiro bloco de mensagem
+# inserir_mensagem(cpf, assunto, dt_hr_ini, mensagem1)
+
+# # Passo 3: Appendar o segundo bloco de mensagem
+# inserir_mensagem(cpf, assunto, dt_hr_ini, mensagem2)
