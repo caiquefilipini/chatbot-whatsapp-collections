@@ -6,6 +6,7 @@ from pycpfcnpj import cpf
 from chatbot import bot_response
 from save_conversations import conectar_mongo, inserir_cliente, inserir_mensagem
 import sqlite3
+import pymongo
 import pandas as pd
 import os
 # Chat
@@ -39,19 +40,39 @@ class CustomerChat:
         Inicializa o estado da sessão ao instanciar a classe.
         """
         self._initialize_session_state()
+        self.st.session_state['filtro'] = 0
+
+        # Variáveis de conexão com o banco de dados
+        self.client, self.db, self.collection = self._conectar_mongo()
+
+
+    def _conectar_mongo(self):
+        """
+        Função para conectar ao banco de dados MongoDB.
+
+        Returns:
+        pymongo.MongoClient, pymongo.database.Database, pymongo.collection.Collection: Conexão com o banco de dados.
+        """
+        try:
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            client.server_info()
+            db = client['db_conversas']
+            collection = db['clientes_conversas']
+            return client, db, collection
+        except Exception as e:
+            print(f"Erro ao conectar ao MongoDB: {e}")
+            return None
+
 
     def _initialize_session_state(self):
         """
         Inicializa o estado da sessão com valores padrão, caso não estejam definidos.
         """
-        if 'input_visibility' not in st.session_state:
-            st.session_state.input_visibility = True
+        # Variáveis de controle do chat
+        st.session_state.inserir_cpf = True
+        st.session_state.inserir_assunto = True
+        st.session_state.cpf_encontrado = False
 
-        if 'input_visibility_assunto' not in st.session_state:
-            st.session_state.input_visibility_assunto = True
-
-        if 'cpf_encontrado' not in st.session_state:
-            st.session_state.cpf_encontrado = False
 
     def _inserir_cpf(self):
         """
@@ -59,17 +80,19 @@ class CustomerChat:
         """
         cpf = st.session_state.cpf_temp
         if cpf.validate(cpf):
-            st.session_state.input_visibility = False
+            st.session_state.inserir_cpf = False
             st.session_state.cpf_cliente = cpf
 
+            
     def _inserir_assunto(self):
         """
         Insere o assunto no estado da sessão se não for vazio e esconde o campo de input.
         """
         assunto = st.session_state.assunto_temp
         if assunto != "":
-            st.session_state.input_visibility_assunto = False
+            st.session_state.inserir_assunto = False
             st.session_state.assunto = st.session_state.assunto_temp
+
 
     def _carregar_dados_cliente(self):
         """
@@ -105,7 +128,15 @@ class CustomerChat:
 
         return dados_cliente
 
+
     def _calcula_ciclo(self, dias_atraso):
+        """
+        Transforma a variável "dias_atraso" em ciclo.
+
+        Returns:
+        str: Ciclo relativo aos dias em atraso.
+        """
+
         ciclos = [
             (30, "Ciclo 1"),
             (60, "Ciclo 2"),
@@ -140,55 +171,66 @@ class CustomerChat:
         consulta_politica = pd.read_excel(os.path.join(path, file))
         consulta_politica = consulta_politica[(consulta_politica["ciclo"] == ciclo) & (consulta_politica["prob_rolagem"] == prob_rolagem)]
 
-        dados_oferta = dict()
-        dados_oferta["dias_pgto"] = consulta_politica["dias_pgto"]
-        dados_oferta["desc_vista"] = consulta_politica["desc_vista"]
-        dados_oferta["desc_exc_vista"] = consulta_politica["desc_exc_vista"]
-        dados_oferta["qtd_max_parcelas"] = consulta_politica["qtd_max_parcelas"]
-        dados_oferta["perc_min_entrada"] = consulta_politica["perc_min_entrada"]
-        dados_oferta["vlr_min_parcela"] = consulta_politica["vlr_min_parcela"]
-        dados_oferta["desc_parc_3_12"] = consulta_politica["desc_parc_3_12"]
-        dados_oferta["desc_parc_13_24"] = consulta_politica["desc_parc_13_24"]
-        dados_oferta["desc_parc_25_36"] = consulta_politica["desc_parc_25_36"]
-        dados_oferta["desc_parc_37_48"] = consulta_politica["desc_parc_37_48"]
-        dados_oferta["desc_parc_49_60"] = consulta_politica["desc_parc_49_60"]
-        dados_oferta["juros_3_12"] = consulta_politica["juros_3_12"]
-        dados_oferta["juros_13_24"] = consulta_politica["juros_13_24"]
-        dados_oferta["juros_25_36"] = consulta_politica["juros_25_36"]
-        dados_oferta["juros_37_48"] = consulta_politica["juros_37_48"]
-        dados_oferta["juros_49_60"] = consulta_politica["juros_49_60"]
-        dados_oferta["desc_exc_parc_3_12"] = consulta_politica["desc_exc_parc_3_12"]
-        dados_oferta["desc_exc_parc_13_24"] = consulta_politica["desc_exc_parc_13_24"]
-        dados_oferta["desc_exc_parc_25_36"] = consulta_politica["desc_exc_parc_25_36"]
-        dados_oferta["desc_exc_parc_37_48"] = consulta_politica["desc_exc_parc_37_48"]
-        dados_oferta["desc_exc_parc_49_60"] = consulta_politica["desc_exc_parc_49_60"]
-        dados_oferta["juros_exc_3_12"] = consulta_politica["juros_exc_3_12"]
-        dados_oferta["juros_exc_13_24"] = consulta_politica["juros_exc_13_24"]
-        dados_oferta["juros_exc_25_36"] = consulta_politica["juros_exc_25_36"]
-        dados_oferta["juros_exc_37_48"] = consulta_politica["juros_exc_37_48"]
-        dados_oferta["juros_exc_49_60"] = consulta_politica["juros_exc_49_60"]
+        dados_politica = dict()
+        dados_politica["dias_pgto"] = consulta_politica["dias_pgto"]
+        dados_politica["desc_vista"] = consulta_politica["desc_vista"]
+        dados_politica["desc_exc_vista"] = consulta_politica["desc_exc_vista"]
+        dados_politica["qtd_max_parcelas"] = consulta_politica["qtd_max_parcelas"]
+        dados_politica["perc_min_entrada"] = consulta_politica["perc_min_entrada"]
+        dados_politica["vlr_min_parcela"] = consulta_politica["vlr_min_parcela"]
+        dados_politica["desc_parc_3_12"] = consulta_politica["desc_parc_3_12"]
+        dados_politica["desc_parc_13_24"] = consulta_politica["desc_parc_13_24"]
+        dados_politica["desc_parc_25_36"] = consulta_politica["desc_parc_25_36"]
+        dados_politica["desc_parc_37_48"] = consulta_politica["desc_parc_37_48"]
+        dados_politica["desc_parc_49_60"] = consulta_politica["desc_parc_49_60"]
+        dados_politica["juros_3_12"] = consulta_politica["juros_3_12"]
+        dados_politica["juros_13_24"] = consulta_politica["juros_13_24"]
+        dados_politica["juros_25_36"] = consulta_politica["juros_25_36"]
+        dados_politica["juros_37_48"] = consulta_politica["juros_37_48"]
+        dados_politica["juros_49_60"] = consulta_politica["juros_49_60"]
+        dados_politica["desc_exc_parc_3_12"] = consulta_politica["desc_exc_parc_3_12"]
+        dados_politica["desc_exc_parc_13_24"] = consulta_politica["desc_exc_parc_13_24"]
+        dados_politica["desc_exc_parc_25_36"] = consulta_politica["desc_exc_parc_25_36"]
+        dados_politica["desc_exc_parc_37_48"] = consulta_politica["desc_exc_parc_37_48"]
+        dados_politica["desc_exc_parc_49_60"] = consulta_politica["desc_exc_parc_49_60"]
+        dados_politica["juros_exc_3_12"] = consulta_politica["juros_exc_3_12"]
+        dados_politica["juros_exc_13_24"] = consulta_politica["juros_exc_13_24"]
+        dados_politica["juros_exc_25_36"] = consulta_politica["juros_exc_25_36"]
+        dados_politica["juros_exc_37_48"] = consulta_politica["juros_exc_37_48"]
+        dados_politica["juros_exc_49_60"] = consulta_politica["juros_exc_49_60"]
 
-        return dados_oferta
+        return dados_politica
 
 
-    def _carrega_dados_conversas(self, cpf, assunto, dt_hr_ini):
+    def _carregar_dados_conversas(self, cpf, assunto, dt_hr_ini):
+        """
+        Documentar
+        
+        Args: 
+        
+        Returns:
+        
+        """
+
         # Carrega dados historicos do Mongo DB
         
+
+        cpf = st.session_state.cpf_cliente
+        assunto = st.session_state.assunto
+        dt_hr_ini = st.session_state.dt_hr_ini
         
         
         pass
 
 
-
-
-    # Função para exibir na tela as informações do cliente e iniciais do chat
+   # Função para exibir na tela as informações do cliente e iniciais do chat
     def _display_customer_info(self):
         """
         Exibe informações do cliente obtidas a partir do banco de dados, caso o CPF esteja registrado.
         """
 
         dados_cliente = self._carregar_dados_cliente()
-        dados_oferta = self._carregar_politica(dados_cliente["dias_atraso"], dados_cliente["prob_rolagem"])
+        dados_politica = self._carregar_politica(dados_cliente["dias_atraso"], dados_cliente["prob_rolagem"])
         
         # Define quais variáveis do cliente serão exibidas
         variaveis_cliente_exibir = [
@@ -213,7 +255,7 @@ class CustomerChat:
         inserir_cliente(
             cpf=st.session_state.cpf_cliente,
             dados_cliente=dados_cliente,
-            dados_oferta=dados_oferta,
+            dados_politica=dados_politica,
             assunto=st.session_state.assunto,
             dt_hr_ini=st.session_state.dt_hr_ini
         )
@@ -229,7 +271,7 @@ class CustomerChat:
         """
 
         # Passo 1. Inserir o CPF do cliente
-        if st.session_state.input_visibility:
+        if st.session_state.inserir_cpf:
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
                 campo_cpf = st.text_input("Insira o CPF do cliente:", key='cpf_temp', help="Insira um CPF válido com 11 dígitos.")
@@ -248,12 +290,12 @@ class CustomerChat:
 
         # Verifica se o CPF foi inserido para continuar a exibição das demais informações
         if 'cpf_cliente' in st.session_state:
-            st.session_state.dt_hr_ini = datetime.now().strftime("%d/%m/%Y %H:%M")
+            st.session_state.dt_hr_ini = datetime.now().strftime("%d/%m/%Y %H:%M").copy() # Isso somente se for um novo chat
             st.write(f"Data e hora de início do chat: {st.session_state.dt_hr_ini}") # Data e hora de início do chat
             st.write("CPF do cliente:", st.session_state.cpf_cliente) # CPF do cliente
             
             # Passo 2. Inserir um assunto válido
-            if st.session_state.input_visibility_assunto:
+            if st.session_state.inserir_assunto:
                 col1, col2, col3 = st.columns([1, 1, 1])
                 with col1:
                     assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key='assunto_temp')
@@ -271,6 +313,208 @@ class CustomerChat:
             # Se o assunto foi inserido, busca e exibe informações do cliente
             if "assunto" in st.session_state:
                 self._display_customer_info()
+
+
+
+##### SIDEBAR #####
+
+
+class Sidebar:
+    def  __init__(self):
+        pass
+
+    def _aplicar_filtro(self, cpf_filtro, lista_cpfs):
+        """
+        Verifica a validade do filtro e, caso seja válido, retorna .
+        
+        Args:
+        cpf_filtro (str): CPF a ser filtrado.
+        lista_cpfs (list): Lista de todos os CPFs com conversas salvas.
+        
+        Returns:
+        list: As posições do CPF filtrado na lista de CPFs.
+        
+        """
+
+        posicoes_lista = []
+        # Valida se o CPF é numérico
+        if not cpf_filtro.isdigit():
+            st.session_state['mensagens_filtro'].append(
+                {
+                    "type": "error",
+                    "content": "Ops... Esse campo só aceita números. Por favor, insira um CPF válido."
+                }
+            )
+        # Valida se existe conversa com o CPF informado
+        elif cpf_filtro not in lista_cpfs:
+            st.session_state['mensagens_filtro'].append(
+                {
+                    "type": "error",
+                    "content": "Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido."
+                }
+            )
+        # Busca as posições do CPF na lista de CPFs
+        else:
+            posicoes_lista = [i for i, x in enumerate(lista_cpfs) if x == cpf_filtro]
+            self.st.session_state['filtro'] = 1
+            st.session_state['mensagens_filtro'].append(
+                {
+                    "type": "info",
+                    "content": f"Exibindo conversas do CPF: {cpf_filtro}"
+                }
+            )
+        st.experimental_rerun()
+        return posicoes_lista
+
+
+    def _limpar_filtro(self):
+        """
+        Documentar
+        
+        Args: 
+        
+        Returns:
+        
+        """
+
+        st.session_state['cpf_filtro'] = ""
+        st.session_state['mensagens_filtro'] = []
+        self.st.session_state['filtro'] == 0
+        st.experimental_rerun()
+
+
+    def _carregar_dados_conversas(self):
+        """
+        Documentar
+        
+        Args: 
+        
+        Returns:
+        
+        """
+
+        documentos = self.collection.find()
+        lista_conversas = []
+        for documento in documentos:
+            cpf = documento["cpf"]
+            for conversa in documento["conversas"]:
+                assunto = conversa["assunto"]
+                for chat in conversa["chats"]:
+                    data_hora_inicio = chat["data_hora_inicio"]
+                    data_inicio = data_hora_inicio.split(" - ")[0]
+                    data_hora_ultima_mensagem = max(mensagem["data_hora_mensagem"] for mensagem in chat["mensagens"])
+                    lista_conversas.append(f"{data_hora_ultima_mensagem}/{data_inicio} - {cpf} - {assunto}")
+        
+        # Ordena os chats por data do mais recente para o mais antigo (por nome de A a Z)
+        lista_conversas.sort() # Ordena por data e hora da última mensagem
+        lista_conversas_separado = [i.split("/")[-1].split(" - ")[0] for i in lista_conversas] # Sem a data da última mensagem
+        lista_cpfs = [i[1] for i in lista_conversas_separado] # Somente os CPFs
+
+        dict_conversas = {
+            "lista_conversas": lista_conversas,
+            "lista_conversas_separado": lista_conversas_separado,
+            "lista_cpfs": lista_cpfs
+        }
+
+        return dict_conversas
+
+
+    def _atualizar_variaveis_chat(self, lista_chat):
+        """
+        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
+        """
+        st.session_state['cpf'] = lista_chat[1]
+        st.session_state['assunto'] = lista_chat[2]
+        st.session_state['data_hora_inicio'] = lista_chat[0]
+        st.experimental_rerun()
+
+
+    def _criar_novo_chat(self):
+        """
+        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
+        """
+        st.session_state['cpf'] = ""
+        st.session_state['assunto'] = ""
+        st.session_state['data_hora_inicio'] = ""
+
+
+    def carregar_sidebar(self):
+        """
+        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
+        """
+        
+        # Botão para criar novo chat (do zero)
+        st.button("Novo Chat", on_click=self._criar_novo_chat())
+        st.sidebar.write("\n")
+        st.sidebar.write("\n")
+        st.sidebar.write("\n")
+
+        # Executa função para carregar todos os dados históricos do banco de dados de conversas
+        dict_conversas = self._carregar_dados_conversas()
+        
+        # Título da sessão de chats históricos
+        st.sidebar.write("---")
+        st.sidebar.title("Histórico de Chats")
+        
+        # Campo para inserir o CPF a ser filtrado
+        cpf_filtro = st.sidebar.text_input(
+                label='Buscar Conversa por CPF',
+                placeholder="CPF do cliente",
+                value=st.session_state['cpf_filtro']
+        )
+        
+        # Botão para executar a busca
+        col1, col2 = st.sidebar.columns([0.5, 0.5])
+        with col1:
+            botao_buscar = st.button(
+                label="Aplicar Filtro",
+                key="buscar",
+                type="primary",
+                # on_click=self._aplicar_filtro(cpf_filtro, dict_conversas["lista_cpfs"])
+            )
+        
+        # Se o botão de busca foi clicado e o campo de CPF não está vazio, aplica o filtro
+        if botao_buscar and cpf_filtro != "":
+            posicoes_lista = self._aplicar_filtro(cpf_filtro, dict_conversas["lista_cpfs"])
+
+            # Habilita o botão para limpar o filtro
+            if self.st.session_state['filtro'] == 1:
+                botao_limpar = st.sidebar.button(
+                    label="Limpar Filtro",
+                    key="limpar",
+                    type="secondary",
+                    on_click=self._limpar_filtro()
+                )
+        else:
+            posicoes_lista = []
+
+        # Se filtro aplicado, define as posições do CPF selecionado, senão define as 10 primeiras posições de todos os chats
+        qtd_exibir_sem_filtro = 10
+        if len(posicoes_lista) > 0:
+            lista_conversas_final = dict_conversas["lista_conversas"][posicoes_lista]
+            lista_conversas_separado_final = dict_conversas["lista_conversas_separado"][posicoes_lista]
+        else:
+            lista_conversas_final = dict_conversas["lista_conversas"][:qtd_exibir_sem_filtro]
+            lista_conversas_separado_final = dict_conversas["lista_conversas_separado"][:qtd_exibir_sem_filtro]
+
+        # Salva os chats na sessão do streamlit
+        st.session_state['lista_chats'] = lista_conversas_separado_final
+
+        # Exibe os botões históricos na sidebar do streamlit
+        for chat in st.session_state['lista_chats']:
+            lista_chat = chat.split(" - ")
+            st.sidebar.button(chat, key=self._exibir_chat, on_click=self._atualizar_variaveis_chat(lista_chat))
+
+
+
+
+
+##### SIDEBAR #####
+
+
+
+
+ 
 
 
 

@@ -12,6 +12,27 @@ from save_conversations import conectar_mongo, inserir_cliente, inserir_mensagem
 
 # from streamlit_copy_to_clipboard import st_copy_button
 
+
+
+# app.py
+
+import streamlit as st
+from functions import CustomerChat
+
+def main():
+    """
+    Função principal que instancia a classe CustomerChat
+    e chama o método para exibir a interface do chat.
+    """
+    chat = CustomerChat()
+    chat.display_chat_interface()
+
+if __name__ == "__main__":
+    # Executa a função principal
+    main()
+
+
+
 st.set_page_config(
     page_title="NegociaAI Santander",
     # page_icon="🦙",
@@ -75,71 +96,71 @@ st.sidebar.write("")
 st.sidebar.write("")
 st.sidebar.write("---")
 
-st.sidebar.title("Histórico de Chats")
+# st.sidebar.title("Histórico de Chats")
 # st.sidebar.write("---")
 
 
 # col1, col2, col3 = st.sidebar.columns([4, 1, 1])
 
 # Campo de texto para buscar conversas por CPF
-texto_buscar_conversa = st.sidebar.text_input(
-        label='Buscar Conversa por CPF',
-        placeholder="CPF do cliente",
-        value=st.session_state['search_query'],
-        key=f"input_{st.session_state['reset_key']}",
-        on_change=lambda: st.session_state.update({'search_query': st.session_state[f"input_{st.session_state['reset_key']}"]})
-    )
+# texto_buscar_conversa = st.sidebar.text_input(
+#         label='Buscar Conversa por CPF',
+#         placeholder="CPF do cliente",
+#         value=st.session_state['search_query'],
+#         key=f"input_{st.session_state['reset_key']}",
+#         on_change=lambda: st.session_state.update({'search_query': st.session_state[f"input_{st.session_state['reset_key']}"]})
+#     )
 
 
 # Faz a busca da conversa pelo CPF
-def buscar_conversa(texto_buscar_conversa):
+# def buscar_conversa(texto_buscar_conversa):
     
-    st.session_state['messages'] = []
+#     st.session_state['messages'] = []
 
-    # Verifica se há texto para buscar
-    if texto_buscar_conversa != "":
+#     # Verifica se há texto para buscar
+#     if texto_buscar_conversa != "":
     
-        # Valida se o CPF é válido
-        if not texto_buscar_conversa.isdigit():
-            st.session_state['messages'].append(
-                {
-                    "type": "error",
-                    "content": "Ops... Esse campo só aceita números. Por favor, insira um CPF válido."
-                }
-            )
-            # st.sidebar.error("Ops... Esse campo só aceita números. Por favor, insira um CPF válido.")
+#         # Valida se o CPF é válido
+#         if not texto_buscar_conversa.isdigit():
+#             st.session_state['messages'].append(
+#                 {
+#                     "type": "error",
+#                     "content": "Ops... Esse campo só aceita números. Por favor, insira um CPF válido."
+#                 }
+#             )
+#             # st.sidebar.error("Ops... Esse campo só aceita números. Por favor, insira um CPF válido.")
     
-        # Verifica se existe conversa com esse CPF
-        elif texto_buscar_conversa not in cpfs:
-            st.session_state['messages'].append(
-                {
-                    "type": "error",
-                    "content": "Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido."
-                }
-            )
-            # st.sidebar.error("Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido.")
+#         # Verifica se existe conversa com esse CPF
+#         elif texto_buscar_conversa not in cpfs:
+#             st.session_state['messages'].append(
+#                 {
+#                     "type": "error",
+#                     "content": "Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido."
+#                 }
+#             )
+#             # st.sidebar.error("Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido.")
     
-        # Faz a busca da conversa
-        else:
-            # Função que faz a busca da conversa...
-            st.session_state['messages'].append(
-                {
-                    "type": "info",
-                    "content": "Conversa encontrada"
-                }
-            )
-            # st.sidebar.write("Conversa encontrada")
-    else:
-        st.session_state['messages'] = []
+#         # Faz a busca da conversa
+#         else:
+#             # Função que faz a busca da conversa...
+#             st.session_state['messages'].append(
+#                 {
+#                     "type": "info",
+#                     "content": "Conversa encontrada"
+#                 }
+#             )
+#             # st.sidebar.write("Conversa encontrada")
+#     else:
+#         st.session_state['messages'] = []
 
 
-col1, col2 = st.sidebar.columns([0.5, 0.5])
-with col1:
-    botao_buscar = st.button(
-        label="Buscar",
-        key="buscar",
-        type="primary",
-    )
+# col1, col2 = st.sidebar.columns([0.5, 0.5])
+# with col1:
+#     botao_buscar = st.button(
+#         label="Buscar",
+#         key="buscar",
+#         type="primary",
+#     )
 
 # with col2:
 #     botao_limpar = st.button(

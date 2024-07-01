@@ -1,0 +1,77 @@
+    {
+        "cpf": 34343434343,
+        "conversas": [
+            {
+                "assunto": "Reclamação",
+                "chats": [
+                    {
+                        "data_hora_inicio": "2024-06-27",
+                        "mensagens": [
+                            {
+                                "id": 1,
+                                "resposta_final_operador": "Sobre qual produto o Sr gostaria de saber mais?"
+                            },
+                            {
+                                "id": 2,
+                                "resposta_final_operador": "Sr. João, o produto correto é o Iphone 15"
+                            },
+                            {
+                                "id": 3,
+                                "resposta_final_operador": "Sr. João, o produto correto é o Iphone 15"
+                            }
+                        ]
+                    },
+                    {
+                        "data_hora_inicio": "2024-06-29",
+                        "mensagens": [
+                            {
+                                "id": 1,
+                                "resposta_final_operador": "Sr. João, o produto correto é o Iphone 15"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "assunto": "Boleto",
+                "chats": [
+                    {
+                        "data_hora_inicio": "2024-06-28",
+                        "mensagens": [
+                            {
+                                "id": 1,
+                                "data_hora_msg = "2024-06-28 - 13h20"
+                                "resposta_final_operador": "Sr. João, o produto correto é o Iphone 15"
+                            },
+                            {
+                                "id": 2,
+                                "data_hora_msg = "2024-07-01 - 13h00"
+                                "resposta_final_operador": "Sr. João"
+                            }
+                        ]
+                    }
+                ]
+            }
+
+        ]
+    },
+    {
+        "cpf": 42006925890,
+        "conversas": [
+            {
+                "assunto": "Reclamação",
+                "chats": [
+                    {
+                        "data_hora_inicio": "2024-06-27",
+                        "mensagens": [
+                            {
+                                "id": 1,
+                                "data_hora_msg = "2024-07-01 - 13h00"
+                                "resposta_final_operador": "Sr. João, o produto correto é o Iphone 15"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
