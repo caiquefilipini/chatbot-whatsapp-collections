@@ -136,7 +136,6 @@ class CustomerChat:
         Returns:
         str: Ciclo relativo aos dias em atraso.
         """
-
         ciclos = [
             (30, "Ciclo 1"),
             (60, "Ciclo 2"),
@@ -261,15 +260,11 @@ class CustomerChat:
         )
 
 
-
-
-
     # Função para iniciar chat com novo cliente
     def display_chat_interface(self):
         """
         Exibe a interface do chat para inserção de CPF, seleção de assunto e exibição de dados do cliente.
         """
-
         # Passo 1. Inserir o CPF do cliente
         if st.session_state.inserir_cpf:
             col1, col2, col3 = st.columns([1, 1, 1])
@@ -317,6 +312,14 @@ class CustomerChat:
 
 
 ##### SIDEBAR #####
+
+
+# Ideia: não ter opção de aplicar filtro (operador pode pesquisar com Ctrl+F, pois os chats sempre serão exibidos em ordem cronológica e com CPF)
+# GPT não tem opção de pesquisar
+# Data - CPF - Assunto
+# Testar sidebar e chat separados primeiro e depois juntos
+# Toy app não vai ter sidebar e também não vai salvar conversas no banco de dados
+# Toy app não vai carregar dados do cliente
 
 
 class Sidebar:
@@ -436,13 +439,13 @@ class Sidebar:
         st.session_state['cpf'] = ""
         st.session_state['assunto'] = ""
         st.session_state['data_hora_inicio'] = ""
+        self._limpar_filtro()
 
 
     def carregar_sidebar(self):
         """
         Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
         """
-        
         # Botão para criar novo chat (do zero)
         st.button("Novo Chat", on_click=self._criar_novo_chat())
         st.sidebar.write("\n")
@@ -505,40 +508,14 @@ class Sidebar:
             lista_chat = chat.split(" - ")
             st.sidebar.button(chat, key=self._exibir_chat, on_click=self._atualizar_variaveis_chat(lista_chat))
 
-
-
-
-
 ##### SIDEBAR #####
 
 
 
 
- 
 
 
-
-
-
-
-# Exibir chat
-
-
-
-# Função para exibir histórico de mensagens
-
-# Recebe CPF, Assunto e Data de Início
-# Busca no banco de dados as mensagens relacionadas a esse CPF, Assunto e Data de Início
-# Escreve na tela as mensagens encontradas
-
-
-
-
-
-# Função para inserir nova mensagem
-
-
-
+#### Função chat ####
 
 class CustomerChatBot:
     def __init__(self):
@@ -714,19 +691,4 @@ class CustomerChatBot:
             dados_conversa = self._carrega_dados_conversas(cpf, assunto, dt_hr_ini)
             self._exibir_historico_chat(dados_conversa)
 
-
-
-
-##### sidebar
-
-def exibir_historico():
-    pass
-
-def exibir_chat_encontrado():
-    pass
-
-def pesquisar_chat():
-    pass
-
-
-
+#### Função chat ####
