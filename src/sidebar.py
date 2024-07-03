@@ -1,18 +1,7 @@
 import streamlit as st
 from conexoes import ConexaoMongo
-
-
-##### SIDEBAR #####
-
-
-# Ideia: não ter opção de aplicar filtro (operador pode pesquisar com Ctrl+F, pois os chats sempre serão exibidos em ordem cronológica e com CPF)
-# GPT não tem opção de pesquisar
-# Data - CPF - Assunto
-
-
-
 class Sidebar:
-    """ Classe para gerenciar a barra lateral do chat.
+    """ Classe para gerenciar a sidebar do aplicativo.
 
     Attributes:
         client (MongoClient): Cliente de conexão ao MongoDB.
