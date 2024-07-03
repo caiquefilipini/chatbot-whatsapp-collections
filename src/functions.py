@@ -40,7 +40,7 @@ class CustomerChat:
         Inicializa o estado da sessão ao instanciar a classe.
         """
         self._initialize_session_state()
-        self.st.session_state['filtro'] = 0
+        self.st.session_state["filtro"] = 0
 
         # Variáveis de conexão com o banco de dados
         self.client, self.db, self.collection = self._conectar_mongo()
@@ -56,8 +56,8 @@ class CustomerChat:
         try:
             client = pymongo.MongoClient("mongodb://localhost:27017/")
             client.server_info()
-            db = client['db_conversas']
-            collection = db['clientes_conversas']
+            db = client["db_conversas"]
+            collection = db["clientes_conversas"]
             return client, db, collection
         except Exception as e:
             print(f"Erro ao conectar ao MongoDB: {e}")
@@ -109,8 +109,8 @@ class CustomerChat:
         consulta_cliente = pd.read_excel(os.path.join(path, file))
         consulta_cliente = consulta_cliente[consulta_cliente["cpf"] == st.session_state.cpf_cliente]
         
-        # query = f"SELECT * FROM customer_database_table WHERE cpf = '{cpf_value}'"        
-        # with sqlite3.connect(os.path.join(path, 'customer_database.sqlite')) as conn:
+        # query = f"SELECT * FROM customer_database_table WHERE cpf = "{cpf_value}""        
+        # with sqlite3.connect(os.path.join(path, "customer_database.sqlite")) as conn:
         #     consulta_cliente = pd.read_sql_query(query, conn)
 
         dados_cliente = {
@@ -269,7 +269,7 @@ class CustomerChat:
         if st.session_state.inserir_cpf:
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
-                campo_cpf = st.text_input("Insira o CPF do cliente:", key='cpf_temp', help="Insira um CPF válido com 11 dígitos.")
+                campo_cpf = st.text_input("Insira o CPF do cliente:", key="cpf_temp", help="Insira um CPF válido com 11 dígitos.")
             
             # Botão para inserir o CPF
             botao_inserir = st.button("Inserir", on_click=self._inserir_cpf, key="inserir_cpf")
@@ -284,7 +284,7 @@ class CustomerChat:
                         st.error("CPF inválido. Verifique e tente novamente.")
 
         # Verifica se o CPF foi inserido para continuar a exibição das demais informações
-        if 'cpf_cliente' in st.session_state:
+        if "cpf_cliente" in st.session_state:
             st.session_state.dt_hr_ini = datetime.now().strftime("%d/%m/%Y %H:%M").copy() # Isso somente se for um novo chat
             st.write(f"Data e hora de início do chat: {st.session_state.dt_hr_ini}") # Data e hora de início do chat
             st.write("CPF do cliente:", st.session_state.cpf_cliente) # CPF do cliente
@@ -293,7 +293,7 @@ class CustomerChat:
             if st.session_state.inserir_assunto:
                 col1, col2, col3 = st.columns([1, 1, 1])
                 with col1:
-                    assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key='assunto_temp')
+                    assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key="assunto_temp")
 
                 # Botão para inserir o assunto
                 botao_inserir_assunto = st.button("Inserir assunto", on_click=self._inserir_assunto, key="inserir_assunto")
@@ -311,204 +311,7 @@ class CustomerChat:
 
 
 
-##### SIDEBAR #####
 
-
-# Ideia: não ter opção de aplicar filtro (operador pode pesquisar com Ctrl+F, pois os chats sempre serão exibidos em ordem cronológica e com CPF)
-# GPT não tem opção de pesquisar
-# Data - CPF - Assunto
-# Testar sidebar e chat separados primeiro e depois juntos
-# Toy app não vai ter sidebar e também não vai salvar conversas no banco de dados
-# Toy app não vai carregar dados do cliente
-
-
-class Sidebar:
-    def  __init__(self):
-        pass
-
-    def _aplicar_filtro(self, cpf_filtro, lista_cpfs):
-        """
-        Verifica a validade do filtro e, caso seja válido, retorna .
-        
-        Args:
-        cpf_filtro (str): CPF a ser filtrado.
-        lista_cpfs (list): Lista de todos os CPFs com conversas salvas.
-        
-        Returns:
-        list: As posições do CPF filtrado na lista de CPFs.
-        
-        """
-
-        posicoes_lista = []
-        # Valida se o CPF é numérico
-        if not cpf_filtro.isdigit():
-            st.session_state['mensagens_filtro'].append(
-                {
-                    "type": "error",
-                    "content": "Ops... Esse campo só aceita números. Por favor, insira um CPF válido."
-                }
-            )
-        # Valida se existe conversa com o CPF informado
-        elif cpf_filtro not in lista_cpfs:
-            st.session_state['mensagens_filtro'].append(
-                {
-                    "type": "error",
-                    "content": "Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido."
-                }
-            )
-        # Busca as posições do CPF na lista de CPFs
-        else:
-            posicoes_lista = [i for i, x in enumerate(lista_cpfs) if x == cpf_filtro]
-            self.st.session_state['filtro'] = 1
-            st.session_state['mensagens_filtro'].append(
-                {
-                    "type": "info",
-                    "content": f"Exibindo conversas do CPF: {cpf_filtro}"
-                }
-            )
-        st.experimental_rerun()
-        return posicoes_lista
-
-
-    def _limpar_filtro(self):
-        """
-        Documentar
-        
-        Args: 
-        
-        Returns:
-        
-        """
-
-        st.session_state['cpf_filtro'] = ""
-        st.session_state['mensagens_filtro'] = []
-        self.st.session_state['filtro'] == 0
-        st.experimental_rerun()
-
-
-    def _carregar_dados_conversas(self):
-        """
-        Documentar
-        
-        Args: 
-        
-        Returns:
-        
-        """
-
-        documentos = self.collection.find()
-        lista_conversas = []
-        for documento in documentos:
-            cpf = documento["cpf"]
-            for conversa in documento["conversas"]:
-                assunto = conversa["assunto"]
-                for chat in conversa["chats"]:
-                    data_hora_inicio = chat["data_hora_inicio"]
-                    data_inicio = data_hora_inicio.split(" - ")[0]
-                    data_hora_ultima_mensagem = max(mensagem["data_hora_mensagem"] for mensagem in chat["mensagens"])
-                    lista_conversas.append(f"{data_hora_ultima_mensagem}/{data_inicio} - {cpf} - {assunto}")
-        
-        # Ordena os chats por data do mais recente para o mais antigo (por nome de A a Z)
-        lista_conversas.sort() # Ordena por data e hora da última mensagem
-        lista_conversas_separado = [i.split("/")[-1].split(" - ")[0] for i in lista_conversas] # Sem a data da última mensagem
-        lista_cpfs = [i[1] for i in lista_conversas_separado] # Somente os CPFs
-
-        dict_conversas = {
-            "lista_conversas": lista_conversas,
-            "lista_conversas_separado": lista_conversas_separado,
-            "lista_cpfs": lista_cpfs
-        }
-
-        return dict_conversas
-
-
-    def _atualizar_variaveis_chat(self, lista_chat):
-        """
-        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
-        """
-        st.session_state['cpf'] = lista_chat[1]
-        st.session_state['assunto'] = lista_chat[2]
-        st.session_state['data_hora_inicio'] = lista_chat[0]
-        st.experimental_rerun()
-
-
-    def _criar_novo_chat(self):
-        """
-        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
-        """
-        st.session_state['cpf'] = ""
-        st.session_state['assunto'] = ""
-        st.session_state['data_hora_inicio'] = ""
-        self._limpar_filtro()
-
-
-    def carregar_sidebar(self):
-        """
-        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
-        """
-        # Botão para criar novo chat (do zero)
-        st.button("Novo Chat", on_click=self._criar_novo_chat())
-        st.sidebar.write("\n")
-        st.sidebar.write("\n")
-        st.sidebar.write("\n")
-
-        # Executa função para carregar todos os dados históricos do banco de dados de conversas
-        dict_conversas = self._carregar_dados_conversas()
-        
-        # Título da sessão de chats históricos
-        st.sidebar.write("---")
-        st.sidebar.title("Histórico de Chats")
-        
-        # Campo para inserir o CPF a ser filtrado
-        cpf_filtro = st.sidebar.text_input(
-                label='Buscar Conversa por CPF',
-                placeholder="CPF do cliente",
-                value=st.session_state['cpf_filtro']
-        )
-        
-        # Botão para executar a busca
-        col1, col2 = st.sidebar.columns([0.5, 0.5])
-        with col1:
-            botao_buscar = st.button(
-                label="Aplicar Filtro",
-                key="buscar",
-                type="primary",
-                # on_click=self._aplicar_filtro(cpf_filtro, dict_conversas["lista_cpfs"])
-            )
-        
-        # Se o botão de busca foi clicado e o campo de CPF não está vazio, aplica o filtro
-        if botao_buscar and cpf_filtro != "":
-            posicoes_lista = self._aplicar_filtro(cpf_filtro, dict_conversas["lista_cpfs"])
-
-            # Habilita o botão para limpar o filtro
-            if self.st.session_state['filtro'] == 1:
-                botao_limpar = st.sidebar.button(
-                    label="Limpar Filtro",
-                    key="limpar",
-                    type="secondary",
-                    on_click=self._limpar_filtro()
-                )
-        else:
-            posicoes_lista = []
-
-        # Se filtro aplicado, define as posições do CPF selecionado, senão define as 10 primeiras posições de todos os chats
-        qtd_exibir_sem_filtro = 10
-        if len(posicoes_lista) > 0:
-            lista_conversas_final = dict_conversas["lista_conversas"][posicoes_lista]
-            lista_conversas_separado_final = dict_conversas["lista_conversas_separado"][posicoes_lista]
-        else:
-            lista_conversas_final = dict_conversas["lista_conversas"][:qtd_exibir_sem_filtro]
-            lista_conversas_separado_final = dict_conversas["lista_conversas_separado"][:qtd_exibir_sem_filtro]
-
-        # Salva os chats na sessão do streamlit
-        st.session_state['lista_chats'] = lista_conversas_separado_final
-
-        # Exibe os botões históricos na sidebar do streamlit
-        for chat in st.session_state['lista_chats']:
-            lista_chat = chat.split(" - ")
-            st.sidebar.button(chat, key=self._exibir_chat, on_click=self._atualizar_variaveis_chat(lista_chat))
-
-##### SIDEBAR #####
 
 
 
@@ -646,9 +449,9 @@ class CustomerChatBot:
             st.write(f"Sugestão da IA: {sugestao_bot}")
             
             # Botão para copiar a sugestão do bot
-            if st.button('Copiar sugestão'):
+            if st.button("Copiar sugestão"):
                 pyperclip.copy(sugestao_bot)
-                st.success('Sugestão copiada!')
+                st.success("Sugestão copiada!")
 
             # Passo 3. Usuário (agente) deve avaliar a sugestão da IA
             if not st.session_state.feedback_applied:

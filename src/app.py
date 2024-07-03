@@ -1,23 +1,33 @@
+
+
+# Libs corretas
+from sidebar import Sidebar
+
+
+
+
 import os
-import pandas as pd
-import sqlite3
-from datetime import datetime
 import streamlit as st
-# from streamlit_feedback import streamlit_feedback
-# import pyperclip
-from pycpfcnpj import cpf
 
 from functions import display_chat, display_interaction
 from save_conversations import conectar_mongo, inserir_cliente, inserir_mensagem
 
-# from streamlit_copy_to_clipboard import st_copy_button
 # app.py
+# Testar sidebar e chat separados primeiro e depois juntos
+# Toy app não vai ter sidebar e também não vai salvar conversas no banco de dados
+# Toy app não vai carregar dados do cliente
+
+
 
 import streamlit as st
 from functions import CustomerChat
 
 
 ### Variáveis de teste ###
+st.session_state["cpf"] = "12345678901"
+st.session_state["assunto"] = "Reclamação"
+
+
 # Lista de CPFs para buscar conversas
 cpfs = list()
 cpfs.append("12345678901")
@@ -29,6 +39,11 @@ def main():
     Função principal que instancia a classe CustomerChat
     e chama o método para exibir a interface do chat.
     """
+
+    sidebar = Sidebar.carregar_sidebar()
+    
+
+
     chat = CustomerChat()
     chat.display_chat_interface()
 
