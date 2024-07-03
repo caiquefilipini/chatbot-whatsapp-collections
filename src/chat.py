@@ -41,6 +41,11 @@ class Chat:
         self.client, self.db, self.collection = ConexaoMongo.conectar_mongo()
 
 
+    # def _initialize_session_state(self):
+    #     """
+    #     Inicializa o estado da sessão com valores padrão, caso não estejam definidos.
+    #     """
+
     ### INFO INICIAIS ###
 
     def _inserir_assunto(self):
@@ -215,6 +220,7 @@ class Chat:
         #     consulta_cliente = pd.read_sql_query(query, conn)
 
         # Para testes iniciais, vamos usar um arquivo Excel
+        # Também estamos considerando que todos os CPFs possuem apenas 1 contrato
         consulta_cliente = pd.read_excel(os.path.join(path, file))
         consulta_cliente = consulta_cliente[consulta_cliente["cpf"] == cpf]
 
@@ -277,32 +283,6 @@ class Chat:
     ####################################### FUNÇÃO BOT #######################################
 
 
-        
-
-
-    def _initialize_session_state(self):
-        """
-        Inicializa o estado da sessão com valores padrão, caso não estejam definidos.
-        """
-
-
-
-    def _resposta_bot(dados_cliente_historico, mensagem_cliente):
-        """
-        Função para obter a sugestão de resposta do bot a partir da mensagem do cliente.
-
-        Args:
-        historico_conversa (dict): Dicionário contendo dados do cliente e dados conversa, históricos e atuais.
-        mensagem_cliente (str): Mensagem do cliente.
-
-        Returns:
-        str: Sugestão de resposta do bot.
-        """
-        # resposta = get_completion(dados_cliente_historico, mensagem_cliente)
-
-        # Resposta padrão para teste
-        resposta = "Olá! Como posso ajudar você?"
-        return resposta
 
 
     def _aplicar_feedback(self):
@@ -347,17 +327,41 @@ class Chat:
         return feedback
 
 
+    def _resposta_bot(dados_cliente, historico_mensagens="", mensagem_cliente=""):
+        """
+        Função para obter a sugestão de resposta do bot a partir da mensagem do cliente.
 
-    def display_chat(self):
+        Args:
+        historico_conversa (dict): Dicionário contendo dados do cliente e dados conversa, históricos e atuais.
+        mensagem_cliente (str): Mensagem do cliente.
+
+        Returns:
+        str: Sugestão de resposta do bot.
+        """
+        # resposta = get_completion(dados_cliente_historico, mensagem_cliente)
+
+        # Resposta padrão para teste
+        resposta = "Olá! O que posso fazer por você hoje?"
+        return resposta
+
+
+    def exibir_elemento_chat(self):
         """
         Função para o criar o elemento de feedback, solicitar a avaliação do agente e atualizar as variáveis de feedback.
         """
+
+
+
+
         
         dados_cliente_historico = []
         mensagem_cliente = []
 
         # Passo 1. Usuário (agente) deve inserir a mensagem recebida do cliente
-        customer_message = st.text_input(label=f"Passo 1. Insira a mensagem que o cliente enviou:", key=f"customer_message_{st.session_state.interaction_count}")
+        customer_message = st.text_input(
+            label=f"Passo 1. Insira a mensagem que o cliente enviou:",
+            key=f"customer_message_{st.session_state.interaction_count}" ## Revisar essa key!!!
+        )
         data_hora_mensagem = datetime.now()
 
         # Passo 2. Bot recebe a mensagem do cliente e sugere uma resposta
@@ -385,32 +389,49 @@ class Chat:
                 st.experimental_rerun() # Rerun da página para exibir a próxima interação da conversa
 
 
+            # for i in range(qtd_mensagens-1, -1, -1):
+            #     _id = i+1
+            #     st.write(f"ID: {_id} / Data e Hora: {data_hora_mensagem[i]}")
+            #     st.write(f"Mensagem do cliente: {mensagem_cliente[i]}")
+            #     st.write(f"Sugestão da IA: {sugestao_bot[i]}  (Nota {feedback[i]})")
+            #     st.write(f"Resposta enviada ao cliente: {resposta_agente[i]}")
+            #     st.write("---")
 
 
-            # Armazenando dados da mensagem
-            cpf = ""
-            assunto = ""
-            dt_hr_ini = ""
+            # st.session.historico_conversa = [] # Não sei se vale a pena...
 
-            id = "" # Adicionar 1 ao maior ID do histórico
+            # st.session.mensagens_cliente = []
+            # st.session.id_interacao = []
+            # st.session.interaction_count = 0 # len(st.session.mensagens_cliente)
+            # st.session.datas_horas_mensagens = []
+            # st.session.sugestoes_bot = []
+            # st.session.feedbacks = []
+            # st.session.respostas_agente = []
+
+
+            # st.session.mensagens_cliente.append()
+            # st.session.id_interacao.append()
+            # st.session.interaction_count =+ 1
+            # st.session.datas_horas_mensagens.append()
+            # st.session.sugestoes_bot.append()
+            # st.session.feedbacks.append()
+            # st.session.respostas_agente.append()
 
 
 
+            # Armazenando dados da interação no banco de dados de conversas
             dict_mensagem = {
-                "id": _id,
+                "id": st.session_state.interaction_count + 1,
                 "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
                 "mensagem_cliente": customer_message,
                 "sugestao_ia": sugestao_bot,
                 "rating_sugestao_ia": feedback,
                 "resposta_final_operador": resposta_agente,
             }
-
-            # Salva a interação no banco de dados
             SaveData.inserir_mensagem(dict_mensagem)
 
             # Carrega e exibe o histórico da conversa
-            dados_conversa = self._carrega_dados_conversas(cpf, assunto, dt_hr_ini)
-            self._exibir_historico_chat(dados_conversa)
+            self._exibir_historico_chat(st.session.dados_conversa)
 
 
             # append da nova mesagem no dict de conversas (para não precisar carregar tudo de novo do banco de dados)
@@ -488,10 +509,3 @@ class Chat:
         # talvez precise salvar o histórico em uma variável de sessão para não precisar carregar novamente
 
 ### DADOS CONVERSA ###
-
-
-
-
-
-
-#### Função chat ####
