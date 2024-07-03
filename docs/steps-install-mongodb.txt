@@ -1,9 +1,0 @@
-Passo a passo para instalar o Mongo DB no computador
-
-Windows:
-
-
-
-
-
-Linux e Mac: ""
