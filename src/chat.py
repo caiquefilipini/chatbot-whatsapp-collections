@@ -290,7 +290,7 @@ class Chat:
         return feedback
 
 
-    def _resposta_bot(dados_cliente, historico_mensagens="", mensagem_cliente=""):
+    def _resposta_bot(dados_cliente, politica, historico_mensagens, mensagem_cliente):
         """
         Função para obter a sugestão de resposta do bot a partir da mensagem do cliente.
 
@@ -313,23 +313,30 @@ class Chat:
         Função para o criar o elemento de feedback, solicitar a avaliação do agente e atualizar as variáveis de feedback.
         """
 
+        # Precisa definir essas variáveis de sessão no início da aplicação !!!
+        dados_cliente = st.session_state.dados_cliente
+        politica = st.session_state.politica
+        dados_conversa = st.session_state.dados_conversa
+        qtd_mensagens_historico = len(dados_conversa)
 
-
-
-        
-        dados_cliente_historico = []
-        mensagem_cliente = []
-
-        # Passo 1. Usuário (agente) deve inserir a mensagem recebida do cliente
-        customer_message = st.text_input(
+        # Usuário (agente) deve inserir a mensagem recebida do cliente
+        mensagem_cliente = st.text_input(
             label=f"Passo 1. Insira a mensagem que o cliente enviou:",
-            key=f"customer_message_{st.session_state.interaction_count}" ## Revisar essa key!!!
+            key=f"mensagem_cliente_{qtd_mensagens_historico+1}"
         )
         data_hora_mensagem = datetime.now()
 
-        # Passo 2. Bot recebe a mensagem do cliente e sugere uma resposta
-        if customer_message:
-            sugestao_bot = self._resposta_bot(dados_cliente_historico, mensagem_cliente)
+        # Bot recebe a mensagem do cliente e sugere uma resposta
+        if mensagem_cliente:
+            historico_mensagens = []
+            if len(dados_conversa) > 0:
+                keys_historico_bot = ['id', 'data_hora', 'mensagem_cliente', "resposta_final_operador"]
+                historico_mensagens = []
+                for i in dados_conversa:
+                    novo_dict_conversa = {k: i[k] for k in keys_historico_bot}
+                    historico_mensagens.append(novo_dict_conversa)
+
+            sugestao_bot = self._resposta_bot(dados_cliente, politica, historico_mensagens, mensagem_cliente)
             st.write(f"Sugestão da IA: {sugestao_bot}")
             
             # Botão para copiar a sugestão do bot
@@ -337,138 +344,86 @@ class Chat:
                 pyperclip.copy(sugestao_bot)
                 st.success("Sugestão copiada!")
 
-            # Passo 3. Usuário (agente) deve avaliar a sugestão da IA
+            # Usuário (agente) deve avaliar a sugestão da IA
             if not st.session_state.feedback_applied:
                 feedback = self._aplicar_feedback()
 
-        # Passo 4. Após o usuário aplicar o feedback ele deve inserir a resposta final que ele vai enviar ao cliente e adicionar a nova interação ao histórico da conversa
+        # Após o usuário aplicar o feedback ele deve inserir a resposta final que ele vai enviar ao cliente e adicionar a nova interação ao histórico da conversa
         if st.session_state.feedback_applied:
             resposta_agente = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", value=st.session_state.sugestao_bot[-1], key=f"resposta_agente")
-            bt_add_historico = st.button("Adicionar ao histórico", key=f"historico_{st.session_state.interaction_count}")
+            bt_add_historico = st.button("Adicionar ao histórico", key=f"historico_{qtd_mensagens_historico+1}")
             
             if bt_add_historico:
-                st.session_state.interaction_count += 1
-                st.session_state.feedback_applied = False # Reseta o estado para o próximo ciclo
-                st.experimental_rerun() # Rerun da página para exibir a próxima interação da conversa
+                st.session_state.feedback_applied = False
 
+                dict_mensagem = {
+                    "id": len(st.session_state.dados_conversa) + 1,
+                    "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
+                    "mensagem_cliente": mensagem_cliente,
+                    "sugestao_ia": sugestao_bot,
+                    "rating_sugestao_ia": feedback,
+                    "resposta_final_operador": resposta_agente,
+                }
 
-            # for i in range(qtd_mensagens-1, -1, -1):
-            #     _id = i+1
-            #     st.write(f"ID: {_id} / Data e Hora: {data_hora_mensagem[i]}")
-            #     st.write(f"Mensagem do cliente: {mensagem_cliente[i]}")
-            #     st.write(f"Sugestão da IA: {sugestao_bot[i]}  (Nota {feedback[i]})")
-            #     st.write(f"Resposta enviada ao cliente: {resposta_agente[i]}")
-            #     st.write("---")
-
-
-            # st.session.historico_conversa = [] # Não sei se vale a pena...
-
-            # st.session.mensagens_cliente = []
-            # st.session.id_interacao = []
-            # st.session.interaction_count = 0 # len(st.session.mensagens_cliente)
-            # st.session.datas_horas_mensagens = []
-            # st.session.sugestoes_bot = []
-            # st.session.feedbacks = []
-            # st.session.respostas_agente = []
-
-
-            # st.session.mensagens_cliente.append()
-            # st.session.id_interacao.append()
-            # st.session.interaction_count =+ 1
-            # st.session.datas_horas_mensagens.append()
-            # st.session.sugestoes_bot.append()
-            # st.session.feedbacks.append()
-            # st.session.respostas_agente.append()
-
-
-
-            # Armazenando dados da interação no banco de dados de conversas
-            dict_mensagem = {
-                "id": st.session_state.interaction_count + 1,
-                "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
-                "mensagem_cliente": customer_message,
-                "sugestao_ia": sugestao_bot,
-                "rating_sugestao_ia": feedback,
-                "resposta_final_operador": resposta_agente,
-            }
-            SaveData.inserir_mensagem(dict_mensagem)
-
-            # Carrega e exibe o histórico da conversa
-            self._exibir_historico_chat(st.session.dados_conversa)
-
-
-            # append da nova mesagem no dict de conversas (para não precisar carregar tudo de novo do banco de dados)
-
-
-
+                st.session_state.dados_conversa.append(dict_mensagem)
+                SaveData.inserir_mensagem(dict_mensagem)
+                st.experimental_rerun()
 
     ####################################### FUNÇÃO BOT #######################################
 
 
 
-
-
-
-
-
     ### DADOS CONVERSA ###
 
-    def _carregar_dados_conversa(self, cpf, assunto, dt_hr_ini):
+    def _carregar_dados_conversa(self):
         """
-        Essa função carrega os dados da conversa do cliente a partir do banco de dados.
-        
+        Carrega os dados da conversa do cliente a partir do banco de dados.
+
+        Returns:
+        list: Lista com os dicionários de informações históricas do chat.
+        """
+
+        dados_conversa = self.collection.aggregate([
+            {"$match": {"cpf": st.session_state.cpf}},
+            {"$unwind": "$conversas"},
+            {"$match": {"conversas.assunto": st.session_state.assunto}},
+            {"$unwind": "$conversas.chats"},
+            {"$match": {"conversas.chats.data_hora_inicio": st.session_state.dt_hr_ini}},
+            {"$project": {
+                "_id": 0,
+                "chat": "$conversas.chats"
+            }}
+        ])
+        dados_conversa = list(dados_conversa)[0]["chat"]["mensagens"]
+        return dados_conversa
+
+
+    def exibir_historico_conversa(self, dados_conversa, asc=False):
+        """
+        Exibe o histórico da conversa do cliente a partir dos dados carregados.
+
         Args:
-        cpf (str): CPF do cliente.
-        assunto (str): Assunto da conversa.
-        dt_hr_ini (str): Data e hora de início da conversa.
+        dados_conversa (dict): Dicionário com os dados da conversa do cliente.
+        asc (bool): Flag para ordenar o histórico de forma ascendente ou descend
         """
 
-        if "dados_conversa" not in st.session_state:
-            dados_conversa = self.collection.find(
-                {"cpf": cpf, "conversas.assunto": assunto, "conversas.chats.data_hora_inicio": dt_hr_ini}
-            )
-            st.session_state.dados_conversa = dados_conversa
+        if st.session_state.carregar_historico:
+            st.session_state.dados_conversa = self._carregar_dados_conversa()
+            st.session_state.carregar_historico = False
 
-    def exibir_historico_conversa(self, dados_conversa):
-        
-        # Carrega o histórico da conversa
-
-        # Somente carrega se não tiver carregado antes
-        # st.session_state.historico_carregado = False
-        # if not st.session_state.historico_carregado:
-
-        # dados_conversa = self._carregar_dados_conversa(
-        #     cpf = st.session_state.cpf,
-        #     assunto = st.session_state.assunto,
-        #     dt_hr_ini = st.session_state.dt_hr_ini)
-  
-        # Organiza os dados da conversa
-        qtd_mensagens = len(dados_conversa["data_hora_mensagem"])
-        data_hora_mensagem = dados_conversa["data_hora_mensagem"]
-        mensagem_cliente = dados_conversa["mensagem_cliente"]
-        sugestao_bot = dados_conversa["sugestao_bot"]
-        feedback = dados_conversa["feedback"]
-        resposta_agente = dados_conversa["resposta_agente"]
-
-        # Somente exibe o histórico se houver mensagens
-        if qtd_mensagens > 0:
+        dados_conversa_exibir = st.session_state.dados_conversa.copy()
+        if not asc:
+            dados_conversa_exibir.reverse()
+        if len(dados_conversa) > 0:
             st.write("---")
             st.write("### Histórico da Conversa")
             st.write("---")
-            
-            # Exibe as mensagens, da mais recente para a mais antiga
-            for i in range(qtd_mensagens-1, -1, -1):
-                _id = i+1
-                st.write(f"ID: {_id} / Data e Hora: {data_hora_mensagem[i]}")
-                st.write(f"Mensagem do cliente: {mensagem_cliente[i]}")
-                st.write(f"Sugestão da IA: {sugestao_bot[i]}  (Nota {feedback[i]})")
-                st.write(f"Resposta enviada ao cliente: {resposta_agente[i]}")
+            # st.button(classificar) # botão para classificar a conversa (em versão futura)
+            for conversa in dados_conversa_exibir:
+                st.write(f"ID: {conversa['id']} - Data e Hora: {conversa['data_hora']}")
+                st.write(f"Mensagem do cliente: {conversa['mensagem_cliente']}")
+                st.write(f"Sugestão da IA: {conversa['sugestao_ia']}  (Nota {conversa['rating_sugestao_ia']})")
+                st.write(f"Resposta enviada ao cliente: {conversa['resposta_final_operador']}")
                 st.write("---")
-        
-
-        
-
-        # se cpf, assunto e dt_ini não mudou, não precisa carregar todo o histórico novamente para exibir
-        # talvez precise salvar o histórico em uma variável de sessão para não precisar carregar novamente
 
 ### DADOS CONVERSA ###
