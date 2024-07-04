@@ -31,11 +31,8 @@ class Chat:
         # st.session_state.cpf_encontrado = False
         # st.session_state["filtro"] = 0
 
-        # Revisar essas variáveis!!!
-        if "interaction_count" not in st.session_state:
-            st.session_state.interaction_count = 0
-        if "feedback_applied" not in st.session_state:
-            st.session_state.feedback_applied = False
+        st.session_state.interaction_count = 0
+        st.session_state.feedback_applied = False
 
         # Variáveis de conexão com o banco de dados
         self.client, self.db, self.collection = ConexaoMongo.conectar_mongo()
@@ -166,42 +163,8 @@ class Chat:
 
         dados_politica = pd.read_excel(os.path.join(path, file))
         dados_politica = dados_politica[(dados_politica["ciclo"] == ciclo) & (dados_politica["prob_rolagem"] == prob_rolagem)]
-        dados_politica = dados_politica.to_dict()
+        dados_politica = dados_politica.to_dict(orient="records")[0]
         return dados_politica
-
-        # dados_politica = dict()
-        # vars_politica = [
-        #     "dias_pgto",
-        #     "desc_vista",
-        #     "desc_exc_vista",
-        #     "qtd_max_parcelas",
-        #     "perc_min_entrada",
-        #     "vlr_min_parcela",
-        #     "desc_parc_3_12",
-        #     "desc_parc_13_24",
-        #     "desc_parc_25_36",
-        #     "desc_parc_37_48",
-        #     "desc_parc_49_60",
-        #     "juros_3_12",
-        #     "juros_13_24",
-        #     "juros_25_36",
-        #     "juros_37_48",
-        #     "juros_49_60",
-        #     "desc_exc_parc_3_12",
-        #     "desc_exc_parc_13_24",
-        #     "desc_exc_parc_25_36",
-        #     "desc_exc_parc_37_48",
-        #     "desc_exc_parc_49_60",
-        #     "juros_exc_3_12",
-        #     "juros_exc_13_24",
-        #     "juros_exc_25_36",
-        #     "juros_exc_37_48",
-        #     "juros_exc_49_60",
-        # ]
-
-        # for v in vars_politica:
-        #     dados_politica[v] = consulta_politica[v]
-        # return dados_politica
 
 
     def _carregar_dados_cliente(self, cpf):
