@@ -19,6 +19,7 @@ class Sidebar:
         st.session_state["cpf"] = lista_chat[1]
         st.session_state["assunto"] = lista_chat[2]
         st.session_state["data_hora_inicio"] = lista_chat[0]
+        st.session_state["carregar_historico"] = True
         st.experimental_rerun()
 
 
