@@ -1,4 +1,3 @@
-
 from pymongo import MongoClient
 from conexoes import ConexaoMongo
 import streamlit as st
@@ -76,6 +75,8 @@ class SaveData:
 
 
     def inserir_mensagem(self, dict_mensagem):
+        """Insere uma nova mensagem no banco de dados MongoDB."""
+        
         self.collection.update_one(
             {"cpf": self.cpf},
             {"$push": {"conversas.$[conversa].chats.$[chat].mensagens": dict_mensagem}},

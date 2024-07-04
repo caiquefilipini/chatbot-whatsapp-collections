@@ -25,23 +25,8 @@ class Chat:
     """
 
     def __init__(self):
-        # Variáveis de sessão
-        # st.session_state.inserir_cpf = True
-        # st.session_state.inserir_assunto = True
-        # st.session_state.cpf_encontrado = False
-        # st.session_state["filtro"] = 0
-
-        st.session_state.interaction_count = 0
         st.session_state.feedback_applied = False
-
-        # Variáveis de conexão com o banco de dados
         self.client, self.db, self.collection = ConexaoMongo.conectar_mongo()
-
-
-    # def _initialize_session_state(self):
-    #     """
-    #     Inicializa o estado da sessão com valores padrão, caso não estejam definidos.
-    #     """
 
     ### INFO INICIAIS ###
 
@@ -121,7 +106,7 @@ class Chat:
     ### INFO INICIAIS ###
 
 
-    ### INFO CLIENTE + POLITICA ###
+    ### INFO CLIENTE + POLITICA + CARREGAR HISTORICO MENSAGENS ###
 
     def _calcula_ciclo(self, dias_atraso):
         """
@@ -204,22 +189,43 @@ class Chat:
         return dados_cliente
     
 
+    def _carregar_dados_conversa(self):
+        """
+        Carrega os dados da conversa do cliente a partir do banco de dados.
+
+        Returns:
+        list: Lista com os dicionários de informações históricas do chat.
+        """
+        
+        dados_conversa = self.collection.aggregate([
+            {"$match": {"cpf": st.session_state.cpf}},
+            {"$unwind": "$conversas"},
+            {"$match": {"conversas.assunto": st.session_state.assunto}},
+            {"$unwind": "$conversas.chats"},
+            {"$match": {"conversas.chats.data_hora_inicio": st.session_state.dt_hr_ini}},
+            {"$project": {
+                "_id": 0,
+                "chat": "$conversas.chats"
+            }}
+        ])
+        dados_conversa = list(dados_conversa)[0]["chat"]["mensagens"]
+        return dados_conversa
+
+
     def exibir_informacoes_cliente(self):
         """
         Exibe informações do cliente obtidas a partir do banco de dados, caso o CPF esteja registrado.
-
-        Returns:
-        dict: Dicionário com informações do cliente e política (quando CPF encontrado).
         """
-        dados_cliente = self._carregar_dados_cliente()
 
-        if dados_cliente == {}: # Se não encontrar o CPF
+        st.session_state.dados_cliente = self._carregar_dados_cliente()
+
+        if st.session_state.dados_cliente == {}: # Se não encontrar o CPF
             st.error("CPF não encontrado na base de clientes. Siga com o atendimento sem o auxílio deste Chatbot.")
         # Se encontrar o CPF, carrega a política atualizada e exibe as informações do cliente
         else:
-            dados_cliente["politica"] = self._carregar_politica(
-                dados_cliente["dias_atraso"],
-                dados_cliente["prob_rolagem"]
+            st.session_state.politica["politica"] = self._carregar_politica(
+                st.session_state.dados_cliente["dias_atraso"],
+                st.session_state.dados_cliente["prob_rolagem"]
             )
             
             # Define quais variáveis do cliente serão exibidas
@@ -234,19 +240,18 @@ class Chat:
             # Escreve as informações do cliente na tela
             st.subheader("Informações do cliente:")
             for label, var in variaveis_cliente_exibir:
-                st.write(f"{label}: {dados_cliente[var]}")
+                st.write(f"{label}: {st.session_state.dados_cliente[var]}")
             st.write("---")
-        
-        return dados_cliente
 
-    ### INFO CLIENTE + POLITICA ###
+            # Define a variável de sessão de histórico de conversa
+            st.session_state.dados_conversa = []
+            if st.session_state.carregar_historico:
+                st.session_state.dados_conversa = self._carregar_dados_conversa()
+                st.session_state.carregar_historico = False
 
-
+    ### INFO CLIENTE + POLITICA + CARREGAR HISTORICO MENSAGENS ###
 
     ####################################### FUNÇÃO BOT #######################################
-
-
-
 
     def _aplicar_feedback(self):
         """
@@ -280,9 +285,8 @@ class Chat:
         )
 
         # Botão para aplicar o feedback
-        bt_aplicar_feedback = st.button("Aplicar Feedback", key=f"feedback_{st.session_state.interaction_count}")
+        bt_aplicar_feedback = st.button("Aplicar Feedback", key=f"feedback_{len(st.session_state.dados_conversa)+1}")
         if bt_aplicar_feedback:
-            st.session_state.feedback.append(feedback) # Salva o feedback do usuário
             st.session_state.feedback_applied = True # Atualiza o estado para indicar que o feedback foi aplicado
         else:
             st.error("Por favor, avalie a sugestão da IA antes de prosseguir.") # Essa mensagem permanece até que o usuário aplique o feedback
@@ -301,7 +305,8 @@ class Chat:
         Returns:
         str: Sugestão de resposta do bot.
         """
-        # resposta = get_completion(dados_cliente_historico, mensagem_cliente)
+
+        # resposta = get_completion(dados_cliente, politica, historico_mensagens, mensagem_cliente)
 
         # Resposta padrão para teste
         resposta = "Olá! O que posso fazer por você hoje?"
@@ -372,33 +377,9 @@ class Chat:
     ####################################### FUNÇÃO BOT #######################################
 
 
+    ### EXIBIR CONVERSA ###
 
-    ### DADOS CONVERSA ###
-
-    def _carregar_dados_conversa(self):
-        """
-        Carrega os dados da conversa do cliente a partir do banco de dados.
-
-        Returns:
-        list: Lista com os dicionários de informações históricas do chat.
-        """
-
-        dados_conversa = self.collection.aggregate([
-            {"$match": {"cpf": st.session_state.cpf}},
-            {"$unwind": "$conversas"},
-            {"$match": {"conversas.assunto": st.session_state.assunto}},
-            {"$unwind": "$conversas.chats"},
-            {"$match": {"conversas.chats.data_hora_inicio": st.session_state.dt_hr_ini}},
-            {"$project": {
-                "_id": 0,
-                "chat": "$conversas.chats"
-            }}
-        ])
-        dados_conversa = list(dados_conversa)[0]["chat"]["mensagens"]
-        return dados_conversa
-
-
-    def exibir_historico_conversa(self, dados_conversa, asc=False):
+    def exibir_historico_conversa(self, asc=False):
         """
         Exibe o histórico da conversa do cliente a partir dos dados carregados.
 
@@ -406,15 +387,11 @@ class Chat:
         dados_conversa (dict): Dicionário com os dados da conversa do cliente.
         asc (bool): Flag para ordenar o histórico de forma ascendente ou descend
         """
-
-        if st.session_state.carregar_historico:
-            st.session_state.dados_conversa = self._carregar_dados_conversa()
-            st.session_state.carregar_historico = False
-
-        dados_conversa_exibir = st.session_state.dados_conversa.copy()
-        if not asc:
-            dados_conversa_exibir.reverse()
-        if len(dados_conversa) > 0:
+        
+        if len(st.session_state.dados_conversa) > 0:
+            dados_conversa_exibir = st.session_state.dados_conversa.copy()
+            if not asc:
+                dados_conversa_exibir.reverse()
             st.write("---")
             st.write("### Histórico da Conversa")
             st.write("---")
@@ -426,4 +403,4 @@ class Chat:
                 st.write(f"Resposta enviada ao cliente: {conversa['resposta_final_operador']}")
                 st.write("---")
 
-### DADOS CONVERSA ###
+    ### EXIBIR CONVERSA ###
