@@ -194,7 +194,7 @@ class Chat:
                 "segmento": consulta_cliente["segmento"][0],
                 "genero": consulta_cliente["genero"][0],
                 "prob_rolagem": consulta_cliente["prob_rolagem"][0],
-                "data_nascimento": consulta_cliente["data_nascimento"][0],
+                "data_nascimento": consulta_cliente["data_nascimento"][0].strftime("%Y-%m-%d"),
                 "idade": relativedelta(datetime.today(), consulta_cliente["data_nascimento"][0]).years,
                 "produto": consulta_cliente["produto"][0],
                 "nro_contrato": consulta_cliente["nro_contrato"][0],
