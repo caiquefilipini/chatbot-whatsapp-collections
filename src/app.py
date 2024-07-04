@@ -4,22 +4,18 @@ from chat import Chat
 
 
 ### Variáveis de teste ###
-st.session_state["cpf"] = "12345678901"
-st.session_state["assunto"] = "Reclamação"
-st.session_state["dt_hr_ini"] = "2023-03-12"
+# st.session_state["cpf"] = "12345678901"
+# st.session_state["assunto"] = "Reclamação"
+# st.session_state["dt_hr_ini"] = "2023-03-12"
 
 
 def configurar_pagina():
-    # Configuração da página
     st.set_page_config(
         page_title="NegociaAI Santander",
-        # page_icon="🦙",
         page_icon="./images/santander-icon.png",
         layout="centered",
         initial_sidebar_state="auto",
         menu_items=None)
-
-    # Título da aplicação
     st.title("NegociaAI Santander")
     st.write("---")
 
@@ -33,7 +29,7 @@ def main():
     Sidebar.carregar_sidebar()
     Chat.exibir_informacoes_iniciais_chat()
     Chat.exibir_informacoes_cliente()
-    # Chat.funcao_chatbot()
+    Chat.exibir_elemento_chat()
     Chat.exibir_historico_convesa()
 
 
