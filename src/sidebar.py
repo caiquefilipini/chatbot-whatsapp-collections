@@ -12,59 +12,6 @@ class Sidebar:
     def  __init__(self):
         self.client, self.db, self.collection = ConexaoMongo.conectar_mongo()
 
-
-    # def _aplicar_filtro(self, cpf_filtro, lista_cpfs):
-    #     """
-    #     Verifica a validade do filtro e, caso seja válido, retorna as posicoes para aplicação do filtro.
-    #     Função desabilitada para esta versão.
-    #     Args:
-    #     cpf_filtro (str): CPF a ser filtrado.
-    #     lista_cpfs (list): Lista de todos os CPFs com conversas salvas.
-    #     Returns:
-    #     list: As posições do CPF filtrado na lista de CPFs.
-    #     """
-    #     posicoes_lista = []
-    #     # Valida se o CPF é numérico
-    #     if not cpf_filtro.isdigit():
-    #         st.session_state["mensagens_filtro"].append(
-    #             {
-    #                 "type": "error",
-    #                 "content": "Ops... Esse campo só aceita números. Por favor, insira um CPF válido."
-    #             }
-    #         )
-    #     # Valida se existe conversa com o CPF informado
-    #     elif cpf_filtro not in lista_cpfs:
-    #         st.session_state["mensagens_filtro"].append(
-    #             {
-    #                 "type": "error",
-    #                 "content": "Não encontrei nenhuma conversa com esse CPF. Por favor, insira um CPF válido."
-    #             }
-    #         )
-    #     # Busca as posições do CPF na lista de CPFs
-    #     else:
-    #         posicoes_lista = [i for i, x in enumerate(lista_cpfs) if x == cpf_filtro]
-    #         self.st.session_state["filtro"] = 1
-    #         st.session_state["mensagens_filtro"].append(
-    #             {
-    #                 "type": "info",
-    #                 "content": f"Exibindo conversas do CPF: {cpf_filtro}"
-    #             }
-    #         )
-    #     st.experimental_rerun()
-    #     return posicoes_lista
-
-
-    # def _limpar_filtro(self):
-    #     """
-    #     Limpa o filtro aplicado e as mensagens de erro.
-    #     Função desabilitada para esta versão.
-    #     """
-    #     st.session_state["cpf_filtro"] = ""
-    #     st.session_state["mensagens_filtro"] = []
-    #     self.st.session_state["filtro"] == 0
-    #     st.experimental_rerun()
-
-
     def _atualizar_variaveis_chat(self, lista_chat):
         """
         Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
@@ -91,15 +38,12 @@ class Sidebar:
                 for chat in conversa["chats"]:
                     data_hora_inicio = chat["data_hora_inicio"]
                     data_inicio = data_hora_inicio.split(" - ")[0]
-                    # data_hora_ultima_mensagem = max(mensagem["data_hora_mensagem"] for mensagem in chat["mensagens"])
-                    # lista_conversas.append(f"{data_hora_ultima_mensagem}/{data_inicio} - {cpf} - {assunto}")
                     lista_conversas.append(f"{data_inicio} - {cpf} - {assunto}")
         
         # Ordena os chats por data do mais recente para o mais antigo (por nome de A a Z)
-        lista_conversas.sort() # Ordena por data e hora de início
-        # lista_conversas_separado = [i.split("/")[-1].split(" - ")[0] for i in lista_conversas] # Sem a data da última mensagem
+        lista_conversas.sort()
         lista_conversas_separado = [i.split(" - ")[0] for i in lista_conversas]
-        lista_cpfs = [i[1] for i in lista_conversas_separado] # Somente os CPFs
+        lista_cpfs = [i[1] for i in lista_conversas_separado]
 
         dict_conversas = {
             "lista_conversas": lista_conversas,
@@ -137,47 +81,6 @@ class Sidebar:
         st.sidebar.title("Histórico de Chats")
         st.write("Os chats estão nomeados no formato 'Data de Início - CPF - Assunto' e são exibidos em ordem de Data de Início, do mais recente para o mais antigo")
         
-        # Campo para inserir o CPF a ser filtrado
-        # cpf_filtro = st.sidebar.text_input(
-        #         label="Buscar Conversa por CPF",
-        #         placeholder="CPF do cliente",
-        #         value=st.session_state["cpf_filtro"]
-        # )
-        
-        # Botão para executar a busca
-        # col1, col2 = st.sidebar.columns([0.5, 0.5])
-        # with col1:
-        #     botao_buscar = st.button(
-        #         label="Aplicar Filtro",
-        #         key="buscar",
-        #         type="primary",
-        #         # on_click=self._aplicar_filtro(cpf_filtro, dict_conversas["lista_cpfs"])
-        #     )
-        
-        # Se o botão de busca foi clicado e o campo de CPF não está vazio, aplica o filtro
-        # if botao_buscar and cpf_filtro != "":
-        #     posicoes_lista = self._aplicar_filtro(cpf_filtro, dict_conversas["lista_cpfs"])
-
-        #     # Habilita o botão para limpar o filtro
-        #     if self.st.session_state["filtro"] == 1:
-        #         botao_limpar = st.sidebar.button(
-        #             label="Limpar Filtro",
-        #             key="limpar",
-        #             type="secondary",
-        #             on_click=self._limpar_filtro()
-        #         )
-        # else:
-        #     posicoes_lista = []
-
-        # Se filtro aplicado, define as posições do CPF selecionado, senão define as 10 primeiras posições de todos os chats
-        # qtd_exibir_sem_filtro = 10
-        # if len(posicoes_lista) > 0:
-        #     lista_conversas_final = dict_conversas["lista_conversas"][posicoes_lista]
-        #     lista_conversas_separado_final = dict_conversas["lista_conversas_separado"][posicoes_lista]
-        # else:
-            # lista_conversas_final = dict_conversas["lista_conversas"][:qtd_exibir_sem_filtro]
-            # lista_conversas_separado_final = dict_conversas["lista_conversas_separado"][:qtd_exibir_sem_filtro]
-
         lista_conversas = dict_conversas["lista_conversas"]
         lista_conversas_separado = dict_conversas["lista_conversas_separado"]
 
