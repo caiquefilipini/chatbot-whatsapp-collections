@@ -10,17 +10,11 @@ class Sidebar:
     """
     
     def  __init__(self):
-        self.client, self.db, self.collection = ConexaoMongo.conectar_mongo()
-
-    def _atualizar_variaveis_chat(self, lista_chat):
-        """
-        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
-        """
-        st.session_state["cpf"] = lista_chat[1]
-        st.session_state["assunto"] = lista_chat[2]
-        st.session_state["data_hora_inicio"] = lista_chat[0]
-        st.session_state["carregar_historico"] = True
-        st.experimental_rerun()
+        st.session_state["cpf"] = ""
+        st.session_state["assunto"] = ""
+        st.session_state["data_hora_inicio"] = ""
+        st.session_state["carregar_historico"] = False
+        self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
 
 
     def _carregar_dados_conversas(self):
@@ -43,7 +37,7 @@ class Sidebar:
         
         # Ordena os chats por data do mais recente para o mais antigo (por nome de A a Z)
         lista_conversas.sort()
-        lista_conversas_separado = [i.split(" - ")[0] for i in lista_conversas]
+        lista_conversas_separado = [i.split(" - ") for i in lista_conversas]
         lista_cpfs = [i[1] for i in lista_conversas_separado]
 
         dict_conversas = {
@@ -52,24 +46,18 @@ class Sidebar:
             "lista_cpfs": lista_cpfs
         }
         return dict_conversas
-
-
-    def _criar_novo_chat(self):
-        """
-        Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
-        """
-        st.session_state["cpf"] = ""
-        st.session_state["assunto"] = ""
-        st.session_state["data_hora_inicio"] = ""
-        # self._limpar_filtro()
-
+    
 
     def carregar_sidebar(self):
         """
         Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
         """
         # Botão para criar novo chat (do zero)
-        st.button("Novo Chat", on_click=self._criar_novo_chat())
+        if st.sidebar.button("Novo Chat", key="novo_chat"):
+            st.session_state["cpf"] = ""
+            st.session_state["assunto"] = ""
+            st.session_state["data_hora_inicio"] = ""
+            st.session_state["carregar_historico"] = False
         st.sidebar.write("\n")
         st.sidebar.write("\n")
         st.sidebar.write("\n")
@@ -80,15 +68,26 @@ class Sidebar:
         # Título da sessão de chats históricos
         st.sidebar.write("---")
         st.sidebar.title("Histórico de Chats")
-        st.write("Os chats estão nomeados no formato 'Data de Início - CPF - Assunto' e são exibidos em ordem de Data de Início, do mais recente para o mais antigo")
-        
+
         lista_conversas = dict_conversas["lista_conversas"]
         lista_conversas_separado = dict_conversas["lista_conversas_separado"]
 
         # Salva os chats na sessão do streamlit
-        st.session_state["lista_chats"] = lista_conversas_separado
+        st.session_state["lista_chats"] = lista_conversas
 
         # Exibe os botões históricos na sidebar do streamlit
         for chat in st.session_state["lista_chats"]:
+            # st.write(chat)
             lista_chat = chat.split(" - ")
-            st.sidebar.button(chat, key=f"chat_{chat}", on_click=self._atualizar_variaveis_chat(lista_chat))
+            texto_botao = f"""Data de Início: {lista_chat[0].split(" ")[0]} \n CPF: {lista_chat[1]}\nAssunto: {lista_chat[2]}
+            """
+            if st.sidebar.button(texto_botao, key=f"chat_{chat}"): #, on_click=lambda: self._atualizar_variaveis_chat(lista_chat))
+                st.session_state["cpf"] = lista_chat[1]
+                st.session_state["assunto"] = lista_chat[2]
+                st.session_state["data_hora_inicio"] = lista_chat[0]
+                st.session_state["carregar_historico"] = True
+
+        st.sidebar.write(f"cpf: {st.session_state["cpf"]}")
+        st.sidebar.write(f"assunto: {st.session_state["assunto"]}")
+        st.sidebar.write(f"data_hora_inicio: {st.session_state["data_hora_inicio"]}")
+        st.sidebar.write(st.session_state["carregar_historico"])
