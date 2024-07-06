@@ -10,12 +10,25 @@ class Sidebar:
     """
     
     def  __init__(self):
-        st.session_state["cpf"] = ""
-        st.session_state["assunto"] = ""
-        st.session_state["data_hora_inicio"] = ""
-        st.session_state["carregar_historico"] = False
+        self._inicializar_variaveis_sessao()
         self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
 
+
+    def _inicializar_variaveis_sessao(self):
+        """
+        Inicializa as variáveis de sessão do streamlit.
+        """
+        if "cpf" not in st.session_state:
+            st.session_state["cpf"] = ""
+        if "assunto" not in st.session_state:
+            st.session_state["assunto"] = ""
+        if "data_hora_inicio" not in st.session_state:
+            st.session_state["data_hora_inicio"] = ""
+        if "carregar_historico" not in st.session_state:
+            st.session_state["carregar_historico"] = False
+        if "novo_chat" not in st.session_state:
+            st.session_state["novo_chat"] = True
+        
 
     def _carregar_dados_conversas(self):
         """
@@ -53,11 +66,12 @@ class Sidebar:
         Atualiza a identificação do chat nas variáveis de sessão do streamlit com os dados do chat selecionado.
         """
         # Botão para criar novo chat (do zero)
-        if st.sidebar.button("Novo Chat", key="novo_chat"):
+        if st.sidebar.button("Novo Chat", key="botao_novo_chat"):
             st.session_state["cpf"] = ""
             st.session_state["assunto"] = ""
             st.session_state["data_hora_inicio"] = ""
             st.session_state["carregar_historico"] = False
+            st.session_state["novo_chat"] = True
         st.sidebar.write("\n")
         st.sidebar.write("\n")
         st.sidebar.write("\n")
@@ -77,7 +91,6 @@ class Sidebar:
 
         # Exibe os botões históricos na sidebar do streamlit
         for chat in st.session_state["lista_chats"]:
-            # st.write(chat)
             lista_chat = chat.split(" - ")
             texto_botao = f"""Data de Início: {lista_chat[0].split(" ")[0]} \n CPF: {lista_chat[1]}\nAssunto: {lista_chat[2]}
             """
@@ -86,8 +99,9 @@ class Sidebar:
                 st.session_state["assunto"] = lista_chat[2]
                 st.session_state["data_hora_inicio"] = lista_chat[0]
                 st.session_state["carregar_historico"] = True
+                st.session_state["novo_chat"] = False
 
-        st.sidebar.write(f"cpf: {st.session_state["cpf"]}")
-        st.sidebar.write(f"assunto: {st.session_state["assunto"]}")
-        st.sidebar.write(f"data_hora_inicio: {st.session_state["data_hora_inicio"]}")
-        st.sidebar.write(st.session_state["carregar_historico"])
+        # st.sidebar.write(f"cpf: {st.session_state["cpf"]}")
+        # st.sidebar.write(f"assunto: {st.session_state["assunto"]}")
+        # st.sidebar.write(f"data_hora_inicio: {st.session_state["data_hora_inicio"]}")
+        # st.sidebar.write(st.session_state["carregar_historico"])

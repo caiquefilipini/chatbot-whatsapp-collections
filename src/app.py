@@ -26,11 +26,11 @@ def main():
     e chama o método para exibir a interface do chat.
     """
     configurar_pagina()
-    Sidebar.carregar_sidebar()
-    Chat.exibir_informacoes_iniciais_chat()
-    Chat.exibir_informacoes_cliente()
-    Chat.exibir_elemento_chat()
-    Chat.exibir_historico_convesa()
+    Sidebar().carregar_sidebar()
+    Chat().exibir_informacoes_iniciais_chat()
+    Chat().exibir_informacoes_cliente()
+    Chat().exibir_elemento_chat()
+    Chat().exibir_historico_conversa()
 
 
 if __name__ == "__main__":

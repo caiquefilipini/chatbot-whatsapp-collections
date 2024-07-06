@@ -10,14 +10,14 @@ class SaveData:
         collection (Collection): Coleção específica dentro do banco de dados para operações.
         cpf (int): CPF do cliente.
         assunto (str): Assunto da conversa.
-        dt_hr_ini (str): Data e hora de início da conversa.
+        data_hora_inicio (str): Data e hora de início da conversa.
     """
 
     def __init__(self):
-        self.client, self.db, self.collection = ConexaoMongo.conectar_mongo()
+        self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
         self.cpf = st.session_state["cpf"]
         self.assunto = st.session_state["assunto"] 
-        self.dt_hr_ini = st.session_state["dt_hr_ini"]
+        self.data_hora_inicio = st.session_state["data_hora_inicio"]
 
     def inserir_cliente(self):
         """ Insere um novo cliente no banco de dados MongoDB. """
@@ -34,7 +34,7 @@ class SaveData:
                         "assunto": self.assunto,
                         "chats": [
                             {
-                                "data_hora_inicio": self.dt_hr_ini,
+                                "data_hora_inicio": self.data_hora_inicio,
                                 "mensagens": []
                             }
                         ]
@@ -54,7 +54,7 @@ class SaveData:
                             "assunto": self.assunto,
                             "chats": [
                                 {
-                                    "data_hora_inicio": self.dt_hr_ini,
+                                    "data_hora_inicio": self.data_hora_inicio,
                                     "mensagens": []
                                 }
                             ]
@@ -67,7 +67,7 @@ class SaveData:
                     {"cpf": self.cpf, "conversas.assunto": self.assunto},
                     {"$push": {
                         "conversas.$.chats": {
-                            "data_hora_inicio": self.dt_hr_ini,
+                            "data_hora_inicio": self.data_hora_inicio,
                             "mensagens": []
                         }
                     }}
@@ -76,12 +76,12 @@ class SaveData:
 
     def inserir_mensagem(self, dict_mensagem):
         """Insere uma nova mensagem no banco de dados MongoDB."""
-        
+
         self.collection.update_one(
             {"cpf": self.cpf},
             {"$push": {"conversas.$[conversa].chats.$[chat].mensagens": dict_mensagem}},
             array_filters=[
                 {"conversa.assunto": self.assunto},
-                {"chat.data_hora_inicio": self.dt_hr_ini}
+                {"chat.data_hora_inicio": self.data_hora_inicio}
             ]
         )
