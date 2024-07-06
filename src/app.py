@@ -3,6 +3,11 @@ from sidebar import Sidebar
 from chat import Chat
 
 # 72388905850
+
+# Testes dando errado
+# Adicionar mensagem novo chat (não adiciona)
+# Adicionar mensagem chat existente (não adiciona e limpa o histórico)
+
 ### Variáveis de teste ###
 # st.session_state["cpf"] = "12345678901"
 # st.session_state["assunto"] = "Reclamação"
