@@ -2,7 +2,7 @@ import streamlit as st
 from sidebar import Sidebar
 from chat import Chat
 
-
+# 72388905850
 ### Variáveis de teste ###
 # st.session_state["cpf"] = "12345678901"
 # st.session_state["assunto"] = "Reclamação"

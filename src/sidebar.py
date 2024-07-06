@@ -28,6 +28,9 @@ class Sidebar:
             st.session_state["carregar_historico"] = False
         if "novo_chat" not in st.session_state:
             st.session_state["novo_chat"] = True
+        # if "conexao_side" not in st.session_state:
+        #     st.session_state.conexao_side = True
+        #     self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
         
 
     def _carregar_dados_conversas(self):

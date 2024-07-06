@@ -25,9 +25,12 @@ class Chat:
     """
 
     def __init__(self):
-        if "aplicar_feedback" not in st.session_state:
-            st.session_state.aplicar_feedback = False
+        self._inicializar_variaveis_sessao()
         self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
+
+    def _inicializar_variaveis_sessao(self):
+        if "feedback_aplicado" not in st.session_state:
+            st.session_state.feedback_aplicado = False
 
     ### INFO INICIAIS ###
 
@@ -271,11 +274,11 @@ class Chat:
 
         # Escala de notas com descrição, para auxiliar o agente
         escala_notas = """
-            1 – Resposta Crítica. Poderia causar dano na imagem do banco, gerar reclamações por parte do cliente ou ainda um processo judicial.\n Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.\n\n
-            2 – Resposta Ruim. Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas não avalio como um bom atendimento.\n Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.\n\n
-            3 – Resposta Razoável. Resposta correta, porém poderia ser mais empático/educado.\n Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo os ajustes necessários.\n\n
-            4 – Boa resposta. Praticamente a mesma resposta que eu daria, porém faria alguns ajustes.\n Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo leves ajustes.\n\n
-            5 – Ótima resposta. Resposta igual ou ainda melhor do que a resposta que eu daria.\n Ação recomendada: Responda o cliente a sugestão da IA, sem alterações.
+            1 – Resposta Crítica.\n- Poderia causar dano na imagem do banco, gerar reclamações por parte do cliente ou ainda um processo judicial.\n- Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.\n\n
+            2 – Resposta Ruim.\n- Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas não avalio como um bom atendimento.\n- Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.\n\n
+            3 – Resposta Razoável.\n- Resposta correta, porém poderia ser mais empático/educado.\n- Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo os ajustes necessários.\n\n
+            4 – Boa resposta.\n- Praticamente a mesma resposta que eu daria, porém faria alguns ajustes.\n- Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo leves ajustes.\n\n
+            5 – Ótima resposta.\n- Resposta igual ou ainda melhor do que a resposta que eu daria.\n- Ação recomendada: Responda o cliente a sugestão da IA, sem alterações.
         """
 
         # Cria o eLemento de feedback
@@ -295,14 +298,14 @@ class Chat:
         # Botão para aplicar o feedback
         bt_aplicar_feedback = st.button("Aplicar Feedback", key=f"feedback_{len(st.session_state.dados_conversa)+1}")
         if bt_aplicar_feedback:
-            st.session_state.aplicar_feedback = True # Atualiza o estado para indicar que o feedback foi aplicado
+            st.session_state.feedback_aplicado = True # Atualiza o estado para indicar que o feedback foi aplicado
         else:
             st.error("Por favor, avalie a sugestão da IA antes de prosseguir.") # Essa mensagem permanece até que o usuário aplique o feedback
 
         return feedback
 
 
-    def _resposta_bot(dados_cliente, politica, historico_mensagens, mensagem_cliente):
+    def _resposta_bot(self): #dados_cliente, politica, historico_mensagens, mensagem_cliente):
         """
         Função para obter a sugestão de resposta do bot a partir da mensagem do cliente.
 
@@ -326,63 +329,65 @@ class Chat:
         Função para o criar o elemento de feedback, solicitar a avaliação do agente e atualizar as variáveis de feedback.
         """
 
-        # Precisa definir essas variáveis de sessão no início da aplicação !!!
-        dados_cliente = st.session_state.dados_cliente
-        politica = st.session_state.politica
+        if st.session_state.assunto != "":
+            # Precisa definir essas variáveis de sessão no início da aplicação !!!
+            dados_cliente = st.session_state.dados_cliente
+            politica = st.session_state.politica
 
-        dados_conversa = st.session_state.dados_conversa
-        qtd_mensagens_historico = len(dados_conversa)
+            dados_conversa = st.session_state.dados_conversa
+            qtd_mensagens_historico = len(dados_conversa)
 
-        # st.write(qtd_mensagens_historico)
+            # st.write(qtd_mensagens_historico)
 
-        # Usuário (agente) deve inserir a mensagem recebida do cliente
-        mensagem_cliente = st.text_input(
-            label=f"Passo 1. Insira a mensagem que o cliente enviou:",
-            key=f"mensagem_cliente_{qtd_mensagens_historico+1}"
-        )
-        data_hora_mensagem = datetime.now()
+            # Usuário (agente) deve inserir a mensagem recebida do cliente
+            mensagem_cliente = st.text_input(
+                label=f"Passo 1. Insira a mensagem que o cliente enviou:",
+                key=f"mensagem_cliente_{qtd_mensagens_historico+1}"
+            )
+            data_hora_mensagem = datetime.now()
 
-        # Bot recebe a mensagem do cliente e sugere uma resposta
-        if mensagem_cliente:
-            historico_mensagens = []
-            if len(dados_conversa) > 0:
-                keys_historico_bot = ['id', 'data_hora', 'mensagem_cliente', "resposta_final_operador"]
-                for i in dados_conversa:
-                    novo_dict_conversa = {k: i[k] for k in keys_historico_bot}
-                    historico_mensagens.append(novo_dict_conversa)
+            # Bot recebe a mensagem do cliente e sugere uma resposta
+            if mensagem_cliente:
+                historico_mensagens = []
+                if len(dados_conversa) > 0:
+                    keys_historico_bot = ['id', 'data_hora', 'mensagem_cliente', "resposta_final_operador"]
+                    for i in dados_conversa:
+                        novo_dict_conversa = {k: i[k] for k in keys_historico_bot}
+                        historico_mensagens.append(novo_dict_conversa)
 
-            sugestao_bot = self._resposta_bot(dados_cliente, politica, historico_mensagens, mensagem_cliente)
-            st.write(f"Sugestão da IA: {sugestao_bot}")
-            
-            # Botão para copiar a sugestão do bot
-            if st.button("Copiar sugestão"):
-                pyperclip.copy(sugestao_bot)
-                st.success("Sugestão copiada!")
+                sugestao_bot = self._resposta_bot() #(dados_cliente, politica, historico_mensagens, mensagem_cliente)
+                st.write(f"Sugestão da IA: {sugestao_bot}")
+                
+                # Botão para copiar a sugestão do bot
+                if st.button("Copiar sugestão"):
+                    pyperclip.copy(sugestao_bot)
+                    st.success("Sugestão copiada!")
 
-            # Usuário (agente) deve avaliar a sugestão da IA
-            if not st.session_state.aplicar_feedback:
-                feedback = self._aplicar_feedback()
+                # Usuário (agente) deve avaliar a sugestão da IA
+                if not st.session_state.feedback_aplicado:
+                    feedback = self._aplicar_feedback()
+                    # st.write(feedback)
 
-        # Após o usuário aplicar o feedback ele deve inserir a resposta final que ele vai enviar ao cliente e adicionar a nova interação ao histórico da conversa
-        if st.session_state.aplicar_feedback:
-            resposta_agente = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", value=st.session_state.sugestao_bot[-1], key=f"resposta_agente")
-            bt_add_historico = st.button("Adicionar ao histórico", key=f"historico_{qtd_mensagens_historico+1}")
-            
-            if bt_add_historico:
-                st.session_state.aplicar_feedback = False
+            # Após o usuário aplicar o feedback ele deve inserir a resposta final que ele vai enviar ao cliente e adicionar a nova interação ao histórico da conversa
+            if st.session_state.feedback_aplicado:
+                resposta_agente = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", value=sugestao_bot, key=f"resposta_agente")
+                bt_add_historico = st.button("Adicionar ao histórico", key=f"historico_{qtd_mensagens_historico+1}")
+                
+                if bt_add_historico:
+                    st.session_state.feedback_aplicado = False
 
-                dict_mensagem = {
-                    "id": len(st.session_state.dados_conversa) + 1,
-                    "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
-                    "mensagem_cliente": mensagem_cliente,
-                    "sugestao_ia": sugestao_bot,
-                    "rating_sugestao_ia": feedback,
-                    "resposta_final_operador": resposta_agente,
-                }
+                    dict_mensagem = {
+                        "id": qtd_mensagens_historico + 1,
+                        "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
+                        "mensagem_cliente": mensagem_cliente,
+                        "sugestao_ia": sugestao_bot,
+                        "rating_sugestao_ia": st.session_state.feedback,
+                        "resposta_final_operador": resposta_agente,
+                    }
 
-                st.session_state.dados_conversa.append(dict_mensagem)
-                SaveData().inserir_mensagem(dict_mensagem)
-                st.experimental_rerun()
+                    st.session_state.dados_conversa.append(dict_mensagem)
+                    SaveData().inserir_mensagem(dict_mensagem)
+                    st.experimental_rerun()
 
     ####################################### FUNÇÃO BOT #######################################
 
@@ -397,25 +402,25 @@ class Chat:
         dados_conversa (dict): Dicionário com os dados da conversa do cliente.
         asc (bool): Flag para ordenar o histórico de forma ascendente ou descend
         """
-        
-        if len(st.session_state.dados_conversa) > 0:
-            
-            if st.session_state["novo_chat"]:
-                SaveData().inserir_cliente()
-                st.session_state.novo_chat = False
+        if st.session_state.assunto != "":
+            if len(st.session_state.dados_conversa) > 0:
+                
+                if st.session_state["novo_chat"]:
+                    SaveData().inserir_cliente()
+                    st.session_state.novo_chat = False
 
-            dados_conversa_exibir = st.session_state.dados_conversa.copy()
-            if not asc:
-                dados_conversa_exibir.reverse()
-            st.write("---")
-            st.write("### Histórico da Conversa")
-            st.write("---")
-            # st.button(classificar) # botão para classificar a conversa (em versão futura)
-            for conversa in dados_conversa_exibir:
-                st.write(f"ID: {conversa['id']} - Data e Hora: {conversa['data_hora']}")
-                st.write(f"Mensagem do cliente: {conversa['mensagem_cliente']}")
-                st.write(f"Sugestão da IA: {conversa['sugestao_ia']}  (Nota {conversa['rating_sugestao_ia']})")
-                st.write(f"Resposta enviada ao cliente: {conversa['resposta_final_operador']}")
+                dados_conversa_exibir = st.session_state.dados_conversa.copy()
+                if not asc:
+                    dados_conversa_exibir.reverse()
                 st.write("---")
+                st.write("### Histórico da Conversa")
+                st.write("---")
+                # st.button(classificar) # botão para classificar a conversa (em versão futura)
+                for conversa in dados_conversa_exibir:
+                    st.write(f"ID: {conversa['id']} - Data e Hora: {conversa['data_hora']}")
+                    st.write(f"Mensagem do cliente: {conversa['mensagem_cliente']}")
+                    st.write(f"Sugestão da IA: {conversa['sugestao_ia']}  (Nota {conversa['rating_sugestao_ia']})")
+                    st.write(f"Resposta enviada ao cliente: {conversa['resposta_final_operador']}")
+                    st.write("---")
 
     ### EXIBIR CONVERSA ###
