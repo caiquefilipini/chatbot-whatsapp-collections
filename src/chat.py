@@ -29,8 +29,21 @@ class Chat:
         self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
 
     def _inicializar_variaveis_sessao(self):
-        if "feedback_aplicado" not in st.session_state:
-            st.session_state.feedback_aplicado = False
+        if "inserir_cpf" not in st.session_state:
+            st.session_state.inserir_cpf = True
+        if "inserir_assunto" not in st.session_state:
+            st.session_state.inserir_assunto = True
+        if "data_hora_inicio" not in st.session_state:
+            st.session_state.data_hora_inicio = ""
+        if "carregar_dados_cliente_politica" not in st.session_state:
+            st.session_state.carregar_dados_cliente_politica = True
+        if "exibir_dados_cliente" not in st.session_state:
+            st.session_state.exibir_dados_cliente = False
+        if "carregar_historico_conversa" not in st.session_state:
+            st.session_state.carregar_historico_conversa = True
+        if "dados_conversa" not in st.session_state:
+            st.session_state.dados_conversa = []
+        
 
     ### INFO INICIAIS ###
 
@@ -51,15 +64,13 @@ class Chat:
         st.session_state['messages'] = []
 
         if cpf_inserido == "":
-            st.session_state.messages = ["Insira um CPF válido."] 
+            st.session_state.messages = "Insira um CPF válido."
         elif not cpf_inserido.isdigit():
-            st.session_state.messages = ["CPF inválido. Insira somente números."]
+            st.session_state.messages = "CPF inválido. Insira somente números."
         elif len(cpf_inserido) != 11:
-            st.session_state.messages = ["O CPF precisa ter exatamente 11 dígitos. Complete com zeros à esquerda, se necessário."]
-        elif not cpf.validate(st.session_state.cpf_temp): 
-            st.session_state.messages["CPF inválido. Verifique e tente novamente."]
-        else:
-            st.session_state.cpf = cpf_inserido
+            st.session_state.messages = "O CPF precisa ter exatamente 11 dígitos. Complete com zeros à esquerda, se necessário."
+        elif not cpf.validate(cpf_inserido): 
+            st.session_state.messages = "CPF inválido. Verifique e tente novamente."
 
 
     def exibir_informacoes_iniciais_chat(self):
@@ -67,7 +78,7 @@ class Chat:
         Exibe as informações iniciais do chat (Data e hora de início, CPF e Assunto).
         """
         # Campo para inserir o CPF do cliente
-        if st.session_state.cpf == "":
+        if st.session_state.inserir_cpf:
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
                 campo_cpf = st.text_input(
@@ -79,12 +90,13 @@ class Chat:
             # Botão para inserir o CPF
             if st.button("Inserir", key="botao_inserir_cpf", on_click=self._validar_cpf):
                 if len(st.session_state.messages) > 0:
-                    for message in st.session_state.messages:
-                        st.error(message)
+                    st.error(st.session_state.messages)
                 else:
                     st.session_state.cpf = st.session_state.cpf_temp
+                    st.session_state.inserir_cpf = False
+                    st.experimental_rerun()
         
-        if st.session_state.cpf != "":
+        if not st.session_state.inserir_cpf:
             # Define a variável de data e hora de início do chat
             if st.session_state.data_hora_inicio == "":
                 st.session_state.data_hora_inicio = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -94,18 +106,18 @@ class Chat:
             st.write("CPF do cliente:", st.session_state.cpf)
             
             # Passo 2. Inserir um assunto válido
-            if st.session_state.assunto == "":
+            if st.session_state.inserir_assunto:
                 col1, col2, col3 = st.columns([1, 1, 1])
                 with col1:
                     assunto = st.selectbox("Selecione o assunto:", ["", "Negociação", "Boleto", "Reclamação"], key="assunto_selecionado")
 
                 # Botão para inserir o assunto
-                botao_inserir_assunto = st.button("Inserir assunto", on_click=self._inserir_assunto, key="inserir_assunto")
+                botao_inserir_assunto = st.button("Inserir assunto", on_click=self._inserir_assunto, key="botao_inserir_assunto")
                 if botao_inserir_assunto:
                     st.error("Insira um assunto válido.")
 
             # Exibe assunto selecionado e salva as informações no banco de dados
-            if st.session_state.assunto != "":
+            if not st.session_state.inserir_assunto:
                 st.write("Assunto:", st.session_state.assunto)
                 st.write("---")
 
@@ -224,41 +236,51 @@ class Chat:
         Exibe informações do cliente obtidas a partir do banco de dados, caso o CPF esteja registrado.
         """
 
-        if st.session_state.assunto != "":   
-            st.session_state.dados_cliente = self._carregar_dados_cliente()
-
-            if st.session_state.dados_cliente == {}: # Se não encontrar o CPF
-                st.error("CPF não encontrado na base de clientes. Siga com o atendimento sem o auxílio deste Chatbot.")
-                SaveData().inserir_cliente()
-
-            
-            # Se encontrar o CPF, carrega a política atualizada e exibe as informações do cliente
-            else:
-                st.session_state.politica = self._carregar_politica(
-                    st.session_state.dados_cliente["dias_atraso"],
-                    st.session_state.dados_cliente["prob_rolagem"]
-                )
+        # Carregar dados do cliente e política
+        
+        # Se o CPF e assunto forem inseridos, carrega os dados do cliente e política
+        if not st.session_state.inserir_cpf and not st.session_state.inserir_assunto:
+           
+            # Somente carrega os dados do cliente e política uma vez
+            if st.session_state.carregar_dados_cliente_politica:
+                st.session_state.dados_cliente = self._carregar_dados_cliente()
                 
-                # Define quais variáveis do cliente serão exibidas
-                variaveis_cliente_exibir = [
-                    ("Nome", "nome"),
-                    ("Segmento", "segmento"),
-                    ("Idade", "idade"),
-                    ("Valor da dívida", "vlr_divida"),
-                    ("Dias em atraso", "dias_atraso")
-                ]
+                 # Se não encontrar o CPF, exibe mensagem de erro e salvar o cliente não encontrado
+                if st.session_state.dados_cliente == {}:
+                    st.error("CPF não encontrado na base de clientes. Siga com o atendimento sem o auxílio deste Chatbot.")
+                    SaveData().inserir_cliente()
+                
+                # Se encontrar o CPF, carrega a política atualizada
+                else:
+                    st.session_state.exibir_dados_cliente = True
+                    st.session_state.politica = self._carregar_politica(
+                        st.session_state.dados_cliente["dias_atraso"],
+                        st.session_state.dados_cliente["prob_rolagem"]
+                    )
+                
+                # Para não ficar carregando sempre e onerando o sistema
+                st.session_state.carregar_dados_cliente_politica = False
 
-                # Escreve as informações do cliente na tela
-                st.subheader("Informações do cliente:")
-                for label, var in variaveis_cliente_exibir:
-                    st.write(f"{label}: {st.session_state.dados_cliente[var]}")
-                st.write("---")
+        if st.session_state.exibir_dados_cliente:
+            # Exibe informações do cliente
+            variaveis_cliente_exibir = [
+                ("Nome", "nome"),
+                ("Segmento", "segmento"),
+                ("Idade", "idade"),
+                ("Valor da dívida", "vlr_divida"),
+                ("Dias em atraso", "dias_atraso")
+            ]
 
-                # Define a variável de sessão de histórico de conversa
-                st.session_state.dados_conversa = []
-                if st.session_state.carregar_historico:
-                    st.session_state.dados_conversa = self._carregar_dados_conversa()
-                    st.session_state.carregar_historico = False
+            # Escreve as informações do cliente na tela
+            st.subheader("Informações do cliente:")
+            for label, var in variaveis_cliente_exibir:
+                st.write(f"{label}: {st.session_state.dados_cliente[var]}")
+            st.write("---")
+
+            # Carrega o histórico da conversa
+            if st.session_state.carregar_historico_conversa:
+                st.session_state.dados_conversa = self._carregar_dados_conversa()
+                st.session_state.carregar_historico_conversa = False # Variável de controle para carregar somente uma vez
 
     ### INFO CLIENTE + POLITICA + CARREGAR HISTORICO MENSAGENS ###
 
@@ -292,15 +314,8 @@ class Chat:
                 "5 – Ótima Resposta",
             ),
             help=escala_notas,
-            key="feedback", 
+            key=f"feedback_{st.session_state.iteracao}",
         )
-
-        # Botão para aplicar o feedback
-        bt_aplicar_feedback = st.button("Aplicar Feedback", key=f"feedback_{len(st.session_state.dados_conversa)+1}")
-        if bt_aplicar_feedback:
-            st.session_state.feedback_aplicado = True # Atualiza o estado para indicar que o feedback foi aplicado
-        else:
-            st.error("Por favor, avalie a sugestão da IA antes de prosseguir.") # Essa mensagem permanece até que o usuário aplique o feedback
 
         return feedback
 
@@ -316,6 +331,12 @@ class Chat:
         Returns:
         str: Sugestão de resposta do bot.
         """
+        historico_mensagens = []
+        if st.session_state.qtd_mensagens_historico > 0:
+            keys_historico_bot = ['id', 'data_hora', 'mensagem_cliente', "resposta_final_operador"]
+            for i in st.session_state.dados_conversa:
+                novo_dict_conversa = {k: i[k] for k in keys_historico_bot}
+                historico_mensagens.append(novo_dict_conversa)
 
         # resposta = get_completion(dados_cliente, politica, historico_mensagens, mensagem_cliente)
 
@@ -329,32 +350,28 @@ class Chat:
         Função para o criar o elemento de feedback, solicitar a avaliação do agente e atualizar as variáveis de feedback.
         """
 
-        if st.session_state.assunto != "":
-            # Precisa definir essas variáveis de sessão no início da aplicação !!!
-            dados_cliente = st.session_state.dados_cliente
-            politica = st.session_state.politica
+        
 
-            dados_conversa = st.session_state.dados_conversa
-            qtd_mensagens_historico = len(dados_conversa)
+        if 'exibir_feedback' not in st.session_state:
+            st.session_state.exibir_feedback = False
+        if 'feedback_aplicado' not in st.session_state:
+            st.session_state.feedback_aplicado = False
+        if 'iteracao' not in st.session_state:
+            st.session_state.iteracao = 0
+        if 'feedback' not in st.session_state:
+            st.session_state.feedback = ""
+        if 'resposta_agente' not in st.session_state:
+            st.session_state.resposta_agente = ""
 
-            # st.write(qtd_mensagens_historico)
+        # Sempre só vai exibir o elemento de chat se também estiver exibindo os dados do cliente
+        if st.session_state.exibir_dados_cliente:
+            st.session_state.qtd_mensagens_historico = len(st.session_state.dados_conversa)
 
             # Usuário (agente) deve inserir a mensagem recebida do cliente
-            mensagem_cliente = st.text_input(
-                label=f"Passo 1. Insira a mensagem que o cliente enviou:",
-                key=f"mensagem_cliente_{qtd_mensagens_historico+1}"
-            )
-            data_hora_mensagem = datetime.now()
-
-            # Bot recebe a mensagem do cliente e sugere uma resposta
-            if mensagem_cliente:
-                historico_mensagens = []
-                if len(dados_conversa) > 0:
-                    keys_historico_bot = ['id', 'data_hora', 'mensagem_cliente', "resposta_final_operador"]
-                    for i in dados_conversa:
-                        novo_dict_conversa = {k: i[k] for k in keys_historico_bot}
-                        historico_mensagens.append(novo_dict_conversa)
-
+            mensagem_cliente = st.text_input("Passo 1. Insira a mensagem que o cliente enviou:", key=f"mensagem_cliente_{st.session_state.iteracao}")
+            if mensagem_cliente != "":
+                st.session_state.exibir_feedback = True
+                data_hora_mensagem = datetime.now()
                 sugestao_bot = self._resposta_bot() #(dados_cliente, politica, historico_mensagens, mensagem_cliente)
                 st.write(f"Sugestão da IA: {sugestao_bot}")
                 
@@ -363,31 +380,57 @@ class Chat:
                     pyperclip.copy(sugestao_bot)
                     st.success("Sugestão copiada!")
 
-                # Usuário (agente) deve avaliar a sugestão da IA
-                if not st.session_state.feedback_aplicado:
-                    feedback = self._aplicar_feedback()
-                    # st.write(feedback)
+                feedback = self._aplicar_feedback()
 
-            # Após o usuário aplicar o feedback ele deve inserir a resposta final que ele vai enviar ao cliente e adicionar a nova interação ao histórico da conversa
-            if st.session_state.feedback_aplicado:
-                resposta_agente = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", value=sugestao_bot, key=f"resposta_agente")
-                bt_add_historico = st.button("Adicionar ao histórico", key=f"historico_{qtd_mensagens_historico+1}")
-                
-                if bt_add_historico:
+                if feedback != st.session_state.feedback:
                     st.session_state.feedback_aplicado = False
 
-                    dict_mensagem = {
-                        "id": qtd_mensagens_historico + 1,
-                        "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
-                        "mensagem_cliente": mensagem_cliente,
-                        "sugestao_ia": sugestao_bot,
-                        "rating_sugestao_ia": st.session_state.feedback,
-                        "resposta_final_operador": resposta_agente,
-                    }
+                # Usuário (agente) deve avaliar a sugestão da IA
+                if not st.session_state.feedback_aplicado: # Está funcionando, mas quando troca o feedback dá bug
+                    # feedback = self._aplicar_feedback()
 
-                    st.session_state.dados_conversa.append(dict_mensagem)
-                    SaveData().inserir_mensagem(dict_mensagem)
-                    st.experimental_rerun()
+                    # Botão para aplicar o feedback
+                    botao_feedback = st.button("Aplicar Feedback", key=f"botao_feedback_{st.session_state.iteracao}")
+                    if botao_feedback:
+                        # st.session_state.exibir_campo_resposta_agente = True # Atualiza o estado para indicar que o feedback foi aplicado
+                        st.session_state.feedback_aplicado = True
+                        st.session_state.feedback = feedback
+                    else:
+                        st.error("Por favor, avalie a sugestão da IA antes de prosseguir.") # Essa mensagem permanece até que o usuário aplique o feedback
+                        st.session_state.feedback_aplicado = False
+                        # st.experimental_rerun()
+
+                # st.write(st.session_state.exibir_campo_resposta_agente)
+                st.write(st.session_state.feedback_aplicado)
+                # st.write(st.session_state.qtd_mensagens_historico)
+                # st.write(st.session_state.dados_conversa)
+                # st.write(st.session_state.iteracao)
+
+                # Após o usuário aplicar o feedback ele deve inserir a resposta final que ele vai enviar ao cliente e adicionar a nova interação ao histórico da conversa
+                if st.session_state.feedback_aplicado:
+                    st.session_state.resposta_agente = st.text_input("Passo 3. Insira a mensagem que você vai enviar ao cliente:", value=sugestao_bot, key=f"resposta_agente_{st.session_state.iteracao}")
+                    botao_historico = st.button("Adicionar ao histórico", key=f"historico_{st.session_state.iteracao}")
+                    if botao_historico:
+                        # mensagem = st.session_state["mensagem_cliente_{st.session_state.iteracao}"]
+                        # st.session_state.feedback = feedback
+                        dict_mensagem = {
+                            "id": st.session_state.qtd_mensagens_historico + 1,
+                            "data_hora": data_hora_mensagem.strftime("%Y-%m-%d") + " - " + data_hora_mensagem.strftime("%H:%M"),
+                            "mensagem_cliente": mensagem_cliente,
+                            "sugestao_ia": sugestao_bot,
+                            "rating_sugestao_ia": st.session_state.feedback,
+                            "resposta_final_operador": st.session_state.resposta_agente,
+                        }
+                        st.session_state.dados_conversa.append(dict_mensagem)
+                        SaveData().inserir_mensagem(dict_mensagem)
+                        st.session_state.exibir_feedback = False
+                        st.session_state.feedback_aplicado = False
+                        st.session_state.iteracao += 1
+                        st.experimental_rerun()
+
+            # st.write(st.session_state.feedback_aplicado)
+            # st.write(st.session_state.qtd_mensagens_historico)
+            # st.write(st.session_state.dados_conversa)
 
     ####################################### FUNÇÃO BOT #######################################
 
@@ -402,7 +445,9 @@ class Chat:
         dados_conversa (dict): Dicionário com os dados da conversa do cliente.
         asc (bool): Flag para ordenar o histórico de forma ascendente ou descend
         """
-        if st.session_state.assunto != "":
+        # if st.session_state.exibir_historico_conversa:
+
+        if st.session_state.exibir_dados_cliente:
             if len(st.session_state.dados_conversa) > 0:
                 
                 if st.session_state["novo_chat"]:

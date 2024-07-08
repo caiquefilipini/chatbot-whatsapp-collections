@@ -24,10 +24,12 @@ class Sidebar:
             st.session_state["assunto"] = ""
         if "data_hora_inicio" not in st.session_state:
             st.session_state["data_hora_inicio"] = ""
-        if "carregar_historico" not in st.session_state:
-            st.session_state["carregar_historico"] = False
+        if "carregar_historico_conversa" not in st.session_state:
+            st.session_state["carregar_historico_conversa"] = False
         if "novo_chat" not in st.session_state:
             st.session_state["novo_chat"] = True
+        if "inserir_cpf" not in st.session_state:
+            st.session_state.inserir_cpf = True
         # if "conexao_side" not in st.session_state:
         #     st.session_state.conexao_side = True
         #     self.client, self.db, self.collection = ConexaoMongo().conectar_mongo()
@@ -73,8 +75,9 @@ class Sidebar:
             st.session_state["cpf"] = ""
             st.session_state["assunto"] = ""
             st.session_state["data_hora_inicio"] = ""
-            st.session_state["carregar_historico"] = False
+            st.session_state["carregar_historico_conversa"] = False
             st.session_state["novo_chat"] = True
+            st.session_state["inserir_cpf"] = True
         st.sidebar.write("\n")
         st.sidebar.write("\n")
         st.sidebar.write("\n")
@@ -101,10 +104,11 @@ class Sidebar:
                 st.session_state["cpf"] = lista_chat[1]
                 st.session_state["assunto"] = lista_chat[2]
                 st.session_state["data_hora_inicio"] = lista_chat[0]
-                st.session_state["carregar_historico"] = True
+                st.session_state["carregar_historico_conversa"] = True
                 st.session_state["novo_chat"] = False
+                st.session_state.inserir_cpf = False
 
         # st.sidebar.write(f"cpf: {st.session_state["cpf"]}")
         # st.sidebar.write(f"assunto: {st.session_state["assunto"]}")
         # st.sidebar.write(f"data_hora_inicio: {st.session_state["data_hora_inicio"]}")
-        # st.sidebar.write(st.session_state["carregar_historico"])
+        # st.sidebar.write(st.session_state["carregar_historico_conversa"])

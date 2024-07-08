@@ -7,6 +7,7 @@ from chat import Chat
 # Testes dando errado
 # Adicionar mensagem novo chat (não adiciona)
 # Adicionar mensagem chat existente (não adiciona e limpa o histórico)
+# Sidebar ordenando errado
 
 ### Variáveis de teste ###
 # st.session_state["cpf"] = "12345678901"
