@@ -119,7 +119,9 @@ class Chat:
             # Exibe assunto selecionado e salva as informações no banco de dados
             if not st.session_state.inserir_assunto:
                 st.write("Assunto:", st.session_state.assunto)
+                st.session_state.exibir_dados_cliente = True
                 st.write("---")
+                # st.write(st.session_state.politica)
 
     ### INFO INICIAIS ###
 
@@ -350,8 +352,6 @@ class Chat:
         Função para o criar o elemento de feedback, solicitar a avaliação do agente e atualizar as variáveis de feedback.
         """
 
-        
-
         if 'exibir_feedback' not in st.session_state:
             st.session_state.exibir_feedback = False
         if 'feedback_aplicado' not in st.session_state:
@@ -401,7 +401,7 @@ class Chat:
                         # st.experimental_rerun()
 
                 # st.write(st.session_state.exibir_campo_resposta_agente)
-                st.write(st.session_state.feedback_aplicado)
+                # st.write(st.session_state.feedback_aplicado)
                 # st.write(st.session_state.qtd_mensagens_historico)
                 # st.write(st.session_state.dados_conversa)
                 # st.write(st.session_state.iteracao)

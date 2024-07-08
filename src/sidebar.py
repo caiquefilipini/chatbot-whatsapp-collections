@@ -78,6 +78,9 @@ class Sidebar:
             st.session_state["carregar_historico_conversa"] = False
             st.session_state["novo_chat"] = True
             st.session_state["inserir_cpf"] = True
+            st.session_state["inserir_assunto"] = True
+            st.session_state.exibir_dados_cliente = False
+
         st.sidebar.write("\n")
         st.sidebar.write("\n")
         st.sidebar.write("\n")
