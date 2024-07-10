@@ -31,12 +31,14 @@ def main():
     Função principal que instancia a classe CustomerChat
     e chama o método para exibir a interface do chat.
     """
+    sidebar = Sidebar()
+    chat = Chat()
     configurar_pagina()
-    Sidebar().carregar_sidebar()
-    Chat().exibir_informacoes_iniciais_chat()
-    Chat().exibir_informacoes_cliente()
-    Chat().exibir_elemento_chat()
-    Chat().exibir_historico_conversa()
+    sidebar.carregar_sidebar()
+    chat.exibir_informacoes_iniciais_chat()
+    chat.exibir_informacoes_cliente()
+    chat.exibir_elemento_chat()
+    chat.exibir_historico_conversa()
 
 
 if __name__ == "__main__":
