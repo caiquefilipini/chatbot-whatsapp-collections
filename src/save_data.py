@@ -85,3 +85,5 @@ class SaveData:
                 {"chat.data_hora_inicio": st.session_state["data_hora_inicio"]}
             ]
         )
+
+        print("Mensagem inserida com sucesso!")

@@ -62,7 +62,7 @@ class Chat:
         Insere o CPF no estado da sessão se for válido e esconde o campo de input.
         """
         cpf_inserido = st.session_state.cpf_temp
-        st.session_state['messages'] = []
+        st.session_state["messages"] = []
 
         if cpf_inserido == "":
             st.session_state.messages = "Insira um CPF válido."
@@ -201,8 +201,8 @@ class Chat:
                 "segmento": consulta_cliente["segmento"].values[0],
                 "genero": consulta_cliente["genero"].values[0],
                 "prob_rolagem": consulta_cliente["prob_rolagem"].values[0],
-                "data_nascimento": consulta_cliente["data_nascimento"].values[0].astype('M8[D]').astype(datetime).strftime("%Y-%m-%d"), # .astype(datetime),
-                "idade": relativedelta(datetime.today(), consulta_cliente["data_nascimento"].values[0].astype('M8[D]').astype(datetime)).years,
+                "data_nascimento": consulta_cliente["data_nascimento"].values[0].astype("M8[D]").astype(datetime).strftime("%Y-%m-%d"), # .astype(datetime),
+                "idade": relativedelta(datetime.today(), consulta_cliente["data_nascimento"].values[0].astype("M8[D]").astype(datetime)).years,
                 "produto": consulta_cliente["produto"].values[0],
                 "nro_contrato": consulta_cliente["nro_contrato"].values[0],
                 "vlr_divida": consulta_cliente["vlr_divida"].values[0],
@@ -338,7 +338,7 @@ class Chat:
         """
         historico_mensagens = []
         if st.session_state.qtd_mensagens_historico > 0:
-            keys_historico_bot = ['id', 'data_hora', 'mensagem_cliente', "resposta_final_operador"]
+            keys_historico_bot = ["id", "data_hora", "mensagem_cliente", "resposta_final_operador"]
             for i in st.session_state.dados_conversa:
                 novo_dict_conversa = {k: i[k] for k in keys_historico_bot}
                 historico_mensagens.append(novo_dict_conversa)
@@ -355,16 +355,18 @@ class Chat:
         Função para o criar o elemento de feedback, solicitar a avaliação do agente e atualizar as variáveis de feedback.
         """
 
-        if 'iteracao' not in st.session_state:
+        if "iteracao" not in st.session_state:
             st.session_state.iteracao = 0
-        if 'exibir_feedback' not in st.session_state:
+        if "exibir_feedback" not in st.session_state:
             st.session_state.exibir_feedback = False
-        if 'feedback_aplicado' not in st.session_state:
+        if "feedback_aplicado" not in st.session_state:
             st.session_state.feedback_aplicado = False
-        if 'feedback' not in st.session_state:
+        if "feedback" not in st.session_state:
             st.session_state.feedback = ""
-        if 'resposta_agente' not in st.session_state:
+        if "resposta_agente" not in st.session_state:
             st.session_state.resposta_agente = ""
+        if "dict_mensagem" not in st.session_state:
+            st.session_state.dict_mensagem = {}
 
         # Sempre só vai exibir o elemento de chat se também estiver exibindo os dados do cliente
         if st.session_state.exibir_dados_cliente:
@@ -395,6 +397,7 @@ class Chat:
                     if botao_feedback:
                         st.session_state.feedback_aplicado = True
                         st.session_state.feedback = feedback
+                        st.experimental_rerun()
                     else:
                         st.error("Por favor, avalie a sugestão da IA antes de prosseguir.") # Essa mensagem permanece até que o usuário aplique o feedback
                         st.session_state.feedback_aplicado = False
@@ -412,8 +415,18 @@ class Chat:
                             "rating_sugestao_ia": st.session_state.feedback,
                             "resposta_final_operador": st.session_state.resposta_agente,
                         }
-                        st.session_state.dados_conversa.append(dict_mensagem)
+                        
+                        if st.session_state["novo_chat"]:
+                            SaveData().inserir_cliente()
+                            texto_novo_chat = (f"{st.session_state.data_hora_inicio} - {st.session_state.cpf} - {st.session_state.assunto}")
+                            # texto_novo_chat = f"""Data de Início: {st.session_state.data_hora_inicio.split(" ")[0]} \n CPF: {st.session_state.cpf}\nAssunto: {st.session_state.assunto}"""
+                            st.session_state["lista_chats"].append(texto_novo_chat)
+                            st.session_state.novo_chat = False
+                            # SaveData().inserir_mensagem(st.session_state.dict_mensagem)
+                        
+                        # st.session_state.dict_mensagem = dict_mensagem
                         SaveData().inserir_mensagem(dict_mensagem)
+                        st.session_state.dados_conversa.append(dict_mensagem)
                         st.session_state.exibir_feedback = False
                         st.session_state.feedback_aplicado = False
                         st.session_state.iteracao += 1
@@ -436,13 +449,14 @@ class Chat:
         if st.session_state.exibir_dados_cliente:
             if len(st.session_state.dados_conversa) > 0:
                 
-                if st.session_state["novo_chat"]:
-                    SaveData().inserir_cliente()
-                    texto_novo_chat = f"""Data de Início: {st.session_state.data_hora_inicio.split(" ")[0]} \n CPF: {st.session_state.cpf}\nAssunto: {st.session_state.assunto}"""
-                    st.session_state["lista_chats"].append(texto_novo_chat)
-                    st.session_state.novo_chat = False
-                    st.experimental_rerun()
-
+                # if st.session_state["novo_chat"]:
+                #     SaveData().inserir_cliente()
+                #     texto_novo_chat = (f"{st.session_state.data_hora_inicio} - {st.session_state.cpf} - {st.session_state.assunto}")
+                #     # texto_novo_chat = f"""Data de Início: {st.session_state.data_hora_inicio.split(" ")[0]} \n CPF: {st.session_state.cpf}\nAssunto: {st.session_state.assunto}"""
+                #     st.session_state["lista_chats"].append(texto_novo_chat)
+                #     st.session_state.novo_chat = False
+                #     st.experimental_rerun()
+                #     SaveData().inserir_mensagem(st.session_state.dict_mensagem)
                 dados_conversa_exibir = st.session_state.dados_conversa.copy()
                 if not asc:
                     dados_conversa_exibir.reverse()
@@ -452,10 +466,10 @@ class Chat:
                 
                 # st.button(classificar) # botão para classificar a conversa (em versão futura)
                 for conversa in dados_conversa_exibir:
-                    st.write(f"ID: {conversa['id']} - Data e Hora: {conversa['data_hora']}")
-                    st.write(f"Mensagem do cliente: {conversa['mensagem_cliente']}")
-                    st.write(f"Sugestão da IA: {conversa['sugestao_ia']}  (Nota {conversa['rating_sugestao_ia']})")
-                    st.write(f"Resposta enviada ao cliente: {conversa['resposta_final_operador']}")
+                    st.write(f"ID: {conversa["id"]} - Data e Hora: {conversa["data_hora"]}")
+                    st.write(f"Mensagem do cliente: {conversa["mensagem_cliente"]}")
+                    st.write(f"Sugestão da IA: {conversa["sugestao_ia"]}  (Nota {conversa["rating_sugestao_ia"]})")
+                    st.write(f"Resposta enviada ao cliente: {conversa["resposta_final_operador"]}")
                     st.write("---")
 
     ### EXIBIR CONVERSA ###

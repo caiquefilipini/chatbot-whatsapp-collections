@@ -54,9 +54,11 @@ class Sidebar:
             for conversa in documento["conversas"]:
                 assunto = conversa["assunto"]
                 for chat in conversa["chats"]:
-                    data_hora_inicio = chat["data_hora_inicio"]
-                    data_inicio = data_hora_inicio.split(" - ")[0]
-                    lista_conversas.append(f"{data_inicio} - {cpf} - {assunto}")
+                    if len(chat["mensagens"]) > 0:
+                        data_hora_inicio = chat["data_hora_inicio"]
+                        data_inicio = data_hora_inicio.split(" - ")[0]
+                        lista_conversas.append(f"{data_inicio} - {cpf} - {assunto}")
+                        
         
         # Ordena os chats por data do mais recente para o mais antigo (por nome de A a Z)
         lista_conversas.sort()
@@ -105,8 +107,8 @@ class Sidebar:
         
         # Título da sessão de chats históricos
         st.sidebar.write("---")
-        if st.sidebar.button("Refresh", key="botao_refresh", type="secondary"):
-            st.experimental_rerun()
+        # if st.sidebar.button("Refresh", key="botao_refresh", type="secondary"):
+        #     st.experimental_rerun()
         st.sidebar.title("Histórico de Chats")
 
         # lista_conversas = dict_conversas["lista_conversas"]
