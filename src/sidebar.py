@@ -1,7 +1,7 @@
 import streamlit as st
 from conexoes import ConexaoMongo
 class Sidebar:
-    """ Classe para gerenciar a sidebar do aplicativo.
+    """Classe para gerenciar a sidebar do aplicativo.
 
     Attributes:
         client (MongoClient): Cliente de conexão ao MongoDB.
@@ -58,7 +58,7 @@ class Sidebar:
                         data_hora_inicio = chat["data_hora_inicio"]
                         data_inicio = data_hora_inicio.split(" - ")[0]
                         lista_conversas.append(f"{data_inicio} - {cpf} - {assunto}")
-                        
+
         
         # Ordena os chats por data do mais recente para o mais antigo (por nome de A a Z)
         lista_conversas.sort()

@@ -2,6 +2,7 @@
 
 import os
 import pandas as pd
+import textwrap
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -299,15 +300,27 @@ class Chat:
         """
 
         # Escala de notas com descrição, para auxiliar o agente
-        escala_notas = """
-            Legenda:\n
-            1 – Resposta Crítica.\n- Poderia causar dano na imagem do banco, gerar reclamações por parte do cliente ou ainda um processo judicial.\n- Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.\n\n
-            2 – Resposta Ruim.\n- Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas não avalio como um bom atendimento.\n- Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.\n\n
-            3 – Resposta Razoável.\n- Resposta correta, porém poderia ser mais empático/educado.\n- Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo os ajustes necessários.\n\n
-            4 – Boa resposta.\n- Praticamente a mesma resposta que eu daria, porém faria alguns ajustes.\n- Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo leves ajustes.\n\n
-            5 – Ótima resposta.\n- Resposta igual ou ainda melhor do que a resposta que eu daria.\n- Ação recomendada: Responda o cliente a sugestão da IA, sem alterações.
-        """
+        escala_notas = textwrap.dedent("""
+            1 – Resposta Crítica.
+            - Poderia causar dano na imagem do banco, gerar reclamações por parte do cliente ou ainda um processo judicial.
+            - Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.
 
+            2 – Resposta Ruim.
+            - Sem riscos de danos ao banco ou de reclamação por parte do cliente, mas não avalio como um bom atendimento.
+            - Ação recomendada: Responda o cliente com suas próprias palavras, descartando completamente a sugestão da IA.
+
+            3 – Resposta Razoável.
+            - Resposta correta, porém poderia ser mais empático/educado.
+            - Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo os ajustes necessários.
+
+            4 – Boa resposta.
+            - Praticamente a mesma resposta que eu daria, porém faria alguns ajustes.
+            - Ação recomendada: Responda o cliente utilizando a sugestão da IA fazendo leves ajustes.
+
+            5 – Ótima resposta.
+            - Resposta igual ou ainda melhor do que a resposta que eu daria.
+            - Ação recomendada: Responda o cliente a sugestão da IA, sem alterações.
+        """)
         # Cria o eLemento de feedback
         feedback = st.radio(
             "Passo 2. Avalie a sugestão da IA:",
