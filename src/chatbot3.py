@@ -5,6 +5,16 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("OPENAPI_API_KEY")
+
+
+
+
 # pip install -U langchain-huggingface
 
 

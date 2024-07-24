@@ -1,6 +1,7 @@
 # Ignore arquivos de segredos
 secrets.toml
 .env
+*.env
 
 # Ignorar arquivos e pastas comuns
 __pycache__/
