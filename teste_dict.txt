@@ -75,3 +75,65 @@
             }
         ]
     }
+
+
+
+
+
+
+
+
+{
+    "numero": 5511985926125,
+    "messagem": "oi",
+    "data_hora": "2024-08-11 - 21:42",
+    "formato": "texto",
+    "tipo": "recebida"
+}
+
+
+
+{'event': 'messages.upsert', 
+'instance': 'NegociaAI_v2',
+'data': 
+    {'key': 
+        {'remoteJid': '5511953911543@s.whatsapp.net',
+        'fromMe': False, 'id': '3ABD50922831B3EBB273'}, 
+    'pushName': 'Dai Soares',
+    'message': 
+        {'extendedTextMessage': 
+            {'text': 'Oi que gato', 
+            'contextInfo': 
+                {'entryPointConversionSource': 'contact_card',
+                'entryPointConversionDelaySeconds': 11}
+            },
+        'messageContextInfo': 
+            {'deviceListMetadata': 
+                {'senderTimestamp': '1723410164',
+                'recipientKeyHash': 'gYVcZlNCVdUTJQ==',
+                'recipientTimestamp': '1723222506'
+            }, 'deviceListMetadataVersion': 2}
+        },
+    'contextInfo':
+        {'entryPointConversionSource': 'contact_card',
+        'entryPointConversionDelaySeconds': 11},
+    'messageType': 'extendedTextMessage',
+    'messageTimestamp': 1723426112,
+    'owner': 'NegociaAI_v2',
+    'source': 'ios'
+    },
+'destination': 'https://a7c4-189-97-90-110.ngrok-free.app/webhook',
+'date_time': '2024-08-11T22:28:31.684Z',
+'sender': '5511950393008@s.whatsapp.net',
+'server_url': 'http://localhost:8080',
+'apikey': 'ngd1yxgms7xwm560gw2j'}
+
+
+{'event': 'messages.upsert',
+'instance': 'NegociaAI_v2',
+'data': 
+    {'key': 
+        {'remoteJid': '5511970594064@s.whatsapp.net',
+        'fromMe': False, 'id': '3A705A18153455A6088D'},
+    'pushName': 'Atendimento Fernanda Encinas', 
+    'message': {'conversation': 'Teste 2', 'messageContextInfo': {'deviceListMetadata': {'senderKeyHash': 'kBgkmb6TCsQ1iQ==', 'senderTimestamp': '1722686704', 'recipientKeyHash': 'gYVcZlNCVdUTJQ==', 'recipientTimestamp': '1723222506'}, 'deviceListMetadataVersion': 2}}, 'messageType': 'conversation', 'messageTimestamp': 1723426677, 'owner': 'NegociaAI_v2', 'source': 'ios'}, 'destination': 'https://a7c4-189-97-90-110.ngrok-free.app/webhook', 'date_time': '2024-08-11T22:37:56.041Z', 'sender': '5511950393008@s.whatsapp.net', 'server_url': 'http://localhost:8080', 'apikey': 'ngd1yxgms7xwm560gw2j'}

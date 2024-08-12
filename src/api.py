@@ -3,8 +3,12 @@ import os
 import pandas as pd
 from datetime import datetime
 from flask import Flask, request, jsonify
+import logging
 
 app = Flask(__name__)
+
+# Configurar logging
+logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/')
 def hello():
@@ -34,7 +38,7 @@ def consultar_cpf(cpf="72388905850"):
         abs_path_file = os.path.abspath(__file__)
         abs_path_dir = os.path.dirname(abs_path_file)
         abs_path = os.path.dirname(abs_path_dir)
-        file_customer_path = os.path.join(abs_path, "data", "base_clientes.xlsx")
+        file_customer_path = os.path.join(abs_path, "data", "base_clientes_excel.xlsx")
         consulta_cliente = pd.read_excel(file_customer_path)
         consulta_cliente = consulta_cliente[consulta_cliente["cpf"] == int(cpf)]
 
@@ -42,8 +46,9 @@ def consultar_cpf(cpf="72388905850"):
             return jsonify({"erro": "CPF não encontrado no banco de dados."}), 404
 
         dados_cliente = {
-            "nome": consulta_cliente["nome"][0],
-            "data_nascimento": consulta_cliente["data_nascimento"].values[0].astype("M8[D]").astype(datetime).strftime("%Y-%m-%d"), # .astype(datetime),
+            "nome": consulta_cliente["nome"].values[0],
+            "primeiro_nome": consulta_cliente["nome"].values[0].split(" ")[0],
+            "data_nascimento": consulta_cliente["data_nascimento"].values[0].astype("M8[D]").astype(datetime).strftime("%d-%m-%Y"), # .astype(datetime),
         }
 
         return jsonify(dados_cliente)

@@ -136,7 +136,7 @@ class Sidebar:
                 st.session_state["carregar_historico_conversa"] = True
                 st.experimental_rerun()
 
-        st.sidebar.write(texto_botao)
+        # st.sidebar.write(texto_botao)
 
         # Ao criar um novo chat, precisa appendar o chat na lista de chats
 
