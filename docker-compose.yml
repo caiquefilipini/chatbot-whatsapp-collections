@@ -1,5 +1,6 @@
-version: '3'
+version: '3.9'
 services:
+
   evolution-api:
     container_name: evolution_api
     image: atendai/evolution-api
@@ -14,4 +15,6 @@ services:
 
 volumes:
   evolution_store:
+    driver: local
   evolution_instances:
+    driver: local
