@@ -1,0 +1,8 @@
+Um abraço. Sander!
+</script_encerramento_nao_negocio>
+
+[VARIAVEIS]
+
+{dados_cliente}
+
+{ofertas_disponiveis}
